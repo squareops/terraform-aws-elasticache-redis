@@ -1,0 +1,3 @@
+exclude:
+  - aws-ssm-secret-use-customer-key # Module defaults to encrypting secrets with CMK, but this is not hardcoded and therefore a spurious error
+  - aws-ec2-no-public-egress-sgr
