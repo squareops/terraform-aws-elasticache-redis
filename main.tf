@@ -46,7 +46,7 @@ resource "aws_elasticache_replication_group" "redis" {
   snapshot_retention_limit   = var.snapshot_retention_limit
   snapshot_arns              = var.snapshot_arns
   multi_az_enabled           = var.multi_az_enabled
-  kms_key_id                 = var.kms_key_id
+  kms_key_id                 = var.kms_key_arn
   at_rest_encryption_enabled = var.at_rest_encryption_enabled
   transit_encryption_enabled = var.transit_encryption_enabled
   auth_token                 = var.transit_encryption_enabled ? random_password.password.result : null

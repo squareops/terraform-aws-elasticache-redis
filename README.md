@@ -1,81 +1,57 @@
-## IAM permission Required to run this module
-- AmazonElastiCacheFullAccess
-- AmazonVPCFullAccess
+## Redis
+![squareops_avatar]
 
-## IAM Permission
-<!-- BEGINNING OF PRE-COMMIT-PIKE DOCS HOOK -->
-The Policy required is:
+[squareops_avatar]: https://squareops.com/wp-content/uploads/2022/12/squareops-logo.png
 
-```json
-{
-    "Version": "2012-10-17",
-    "Statement": [
-        {
-            "Sid": "VisualEditor0",
-            "Effect": "Allow",
-            "Action": [
-                "ec2:AuthorizeSecurityGroupEgress",
-                "ec2:AuthorizeSecurityGroupIngress",
-                "ec2:CreateSecurityGroup",
-                "ec2:CreateTags",
-                "ec2:DeleteSecurityGroup",
-                "ec2:DeleteTags",
-                "ec2:DescribeAccountAttributes",
-                "ec2:DescribeNetworkInterfaces",
-                "ec2:DescribeSecurityGroups",
-                "ec2:RevokeSecurityGroupEgress",
-                "ec2:RevokeSecurityGroupIngress"
-            ],
-            "Resource": [
-                "*"
-            ]
-        },
-        {
-            "Sid": "VisualEditor1",
-            "Effect": "Allow",
-            "Action": [
-                "elasticache:AddTagsToResource",
-                "elasticache:CreateCacheParameterGroup",
-                "elasticache:CreateCacheSubnetGroup",
-                "elasticache:CreateReplicationGroup",
-                "elasticache:DeleteCacheParameterGroup",
-                "elasticache:DeleteCacheSubnetGroup",
-                "elasticache:DeleteReplicationGroup",
-                "elasticache:DescribeCacheParameterGroups",
-                "elasticache:DescribeCacheParameters",
-                "elasticache:DescribeCacheSubnetGroups",
-                "elasticache:DescribeReplicationGroups",
-                "elasticache:ListTagsForResource",
-                "elasticache:ModifyCacheParameterGroup",
-                "elasticache:ModifyCacheSubnetGroup",
-                "elasticache:ModifyReplicationGroup",
-                "elasticache:RemoveTagsFromResource"
-            ],
-            "Resource": [
-                "*"
-            ]
-        },
-        {
-            "Sid": "VisualEditor2",
-            "Effect": "Allow",
-            "Action": [
-                "secretsmanager:CreateSecret",
-                "secretsmanager:DeleteSecret",
-                "secretsmanager:DescribeSecret",
-                "secretsmanager:GetResourcePolicy",
-                "secretsmanager:TagResource",
-                "secretsmanager:UntagResource"
-            ],
-            "Resource": [
-                "*"
-            ]
-        }
-    ]
+### [SquareOps Technologies](https://squareops.com/) Your DevOps Partner for Accelerating cloud journey.
+<br>
+We publish several terraform modules.
+<br>
+Terraform Module to create Redis on AWS Cloud.
+
+## Uses Example
+
+```hcl
+
+module "redis" {
+  source = "gitlab.com/sq-ia/aws/redis.git"  
+  environment = "production"
+  name        = "SKAF"
+  engine_version  = "6.x"
+  port            = 6379
+  node_type       = "cache.t3.small"
+  num_cache_nodes = 2
+  family          = "redis6.x"
+  availability_zones         = [for n in range(0, 2) : data.aws_availability_zones.available.names[n]]
+  automatic_failover_enabled = true
+  snapshot_retention_limit   = 7
+  multi_az_enabled           = false
+  at_rest_encryption_enabled = true
+  transit_encryption_enabled = false
+  notification_topic_arn     = null
+  vpc_id                     = "vpc-06e37f0786b7eskaf"
+  subnets                    = ["subnet-0bfc23c64ea3eskaf","subnet-0140024df275bskaf"]
+  allowed_cidr_blocks        = []
+  allowed_security_groups    = [sg-0132a41b5cd18skaf]
+  maintenance_window         = "sun:09:00-sun:10:00"
+  snapshot_window            = "07:00-08:00"
+  kms_key_arn = "arn:aws:kms:us-east-2:222222222222:key/kms_key_arn"
 }
 
-
 ```
-<!-- END OF PRE-COMMIT-PIKE DOCS HOOK -->
+
+## Important Note
+1. This module creates RDS security group.
+2. By default, the variable `create_random_password` is set to true. Therefore, even if the user provides a password, it will not be read. The `create_random_password` variable should be set to false and the `password` variable should have a non-null value to be read and used.
+
+## Security & Compliance [<img src="	https://prowler.pro/wp-content/themes/prowler-pro/assets/img/logo.svg" width="250" align="right" />](https://prowler.pro/)
+
+Security scanning is graciously provided by Prowler. Proowler is the leading fully hosted, cloud-native solution providing continuous cluster security and compliance.
+
+| Benchmark | Description |
+|--------|---------------|
+| Ensure that encryption is enabled for RDS instances | Enabled for RDS created using this module. |
+
 <!-- BEGINNING OF PRE-COMMIT-TERRAFORM DOCS HOOK -->
 ## Requirements
 
@@ -83,14 +59,14 @@ The Policy required is:
 |------|---------|
 | <a name="requirement_terraform"></a> [terraform](#requirement\_terraform) | >= 1.0 |
 | <a name="requirement_aws"></a> [aws](#requirement\_aws) | >= 4.23 |
-| <a name="requirement_random"></a> [random](#requirement\_random) | ~> 3.0.0 |
+| <a name="requirement_random"></a> [random](#requirement\_random) | >= 3.0.0 |
 
 ## Providers
 
 | Name | Version |
 |------|---------|
 | <a name="provider_aws"></a> [aws](#provider\_aws) | >= 4.23 |
-| <a name="provider_random"></a> [random](#provider\_random) | ~> 3.0.0 |
+| <a name="provider_random"></a> [random](#provider\_random) | >= 3.0.0 |
 
 ## Modules
 
@@ -158,3 +134,70 @@ The Policy required is:
 | <a name="output_elastic_cache_redis_security_group"></a> [elastic\_cache\_redis\_security\_group](#output\_elastic\_cache\_redis\_security\_group) | The security group ID of the cluster |
 | <a name="output_elastic_cache_redis_subnet_group_name"></a> [elastic\_cache\_redis\_subnet\_group\_name](#output\_elastic\_cache\_redis\_subnet\_group\_name) | Subnet group name of the elasticache\_redis cluster |
 <!-- END OF PRE-COMMIT-TERRAFORM DOCS HOOK -->
+
+## Contribution & Issue Reporting
+
+To contribute to a project, you can typically:
+
+  1. Find the repository on a platform like GitHub
+  2. Fork the repository to your own account
+  3. Make changes to the code
+  4. Submit a pull request to the original repository
+
+To report an issue with a project:
+
+  1. Check the repository's [issue tracker](https://github.com/squareops/terraform-aws-vpc/issues) on GitHub
+  2. Search to see if the issue has already been reported
+  3. If you can't find an answer to your question in the documentation or issue tracker, you can ask a question by creating a new issue. Be sure to provide enough context and details so others can understand your problem.
+  4. Contributing to the project can be a great way to get involved and get help. The maintainers and other contributors may be more likely to help you if you're already making contributions to the project.
+
+## Our Other Projects
+
+We have a number of other projects that you might be interested in:
+
+  1. [terraform-aws-vpc](https://github.com/squareops/terraform-aws-vpc): Terraform module to create Networking resources for workload deployment on AWS Cloud.
+
+  2. [terraform-aws-keypair](https://github.com/squareops/terraform-aws-keypair): Terraform module which creates EC2 key pair on AWS. The private key will be stored on SSM.
+
+     Follow Us:
+
+     To stay updated on our projects and future release, follow us on
+     [GitHub](https://github.com/squareops/),
+     [LinkedIn](https://www.linkedin.com/company/squareops-technologies-pvt-ltd/)
+
+     By joining our both the [email](https://github.com/squareops) and [Slack community](https://github.com/squareops), you can benefit from the different ways in which we provide support. You can receive timely notifications and updates through email and engage in real-time conversations and discussions with other members through Slack. This combination of resources can help you stay informed, get help when you need it, and contribute to the project in a meaningful way.  
+
+## Security, Validation and pull-requests
+we have offered here high standard, quality code. Hence we are using several [pre-commit hooks](.pre-commit-config.yaml) and [GitHub Actions](https://gitlab.com/sq-ia/aws/eks/-/tree/v1.0.0#security-validation-and-pull-requests) as a workflow. So here we will create pull-requests to any branch and validate the request automatically using pre-commit tool.
+
+## License
+
+Apache License, Version 2.0, January 2004 (http://www.apache.org/licenses/).
+
+## Support Us
+
+To support a GitHub project by liking it, you can follow these steps:
+
+  1. Visit the repository: Navigate to the GitHub repository.
+
+  2. Click the "Star" [button](https://github.com/squareops/terraform-aws-vpc): On the repository page, you'll see a "Star" button in the upper right corner. Clicking on it will star the repository, indicating your support for the project.
+
+  3. Optionally, you can also leave a comment on the repository or open an issue to give feedback or suggest changes.
+
+Starring a repository on GitHub is a simple way to show your support and appreciation for the project. It also helps to increase the visibility of the project and make it more discoverable to others.
+
+## Who we are
+
+We believe that the key to success in the digital age is the ability to deliver value quickly and reliably. That’s why we offer a comprehensive range of DevOps & Cloud services designed to help your organization optimize its systems & Processes for speed and agility.
+
+  1. We are an AWS Advanced consulting partner which reflects our deep expertise in AWS Cloud and helping 100+ clients over the last 4 years.
+  2. Expertise in Kubernetes and overall container solution helps companies expedite their journey by 10X.
+  3. Infrastructure Automation is a key component to the success of our Clients and our Expertise helps deliver the same in the shortest time.
+  4. DevSecOps as a service to implement security within the overall DevOps process and helping companies deploy securely and at speed.
+  5. Platform engineering which supports scalable,Cost efficient infrastructure that supports rapid development, testing, and deployment.
+  6. 24*7 SRE service to help you Monitor the state of your infrastructure and eradicate any issue within the SLA.
+
+We provide [support](https://squareops.com/contact-us/) on all of our projects, no matter how small or large they may be.
+
+You can find more information about our company on this [squareops.com](https://squareops.com/), follow us on [linkdin](https://www.linkedin.com/company/squareops-technologies-pvt-ltd/), or fill out a [job application](https://squareops.com/careers/). If you have any questions or would like assistance with your cloud strategy and implementation, please don't hesitate to [contact us](https://squareops.com/contact-us/).
+
