@@ -1,24 +1,35 @@
 output "primary_endpoint_address" {
   description = "Primary endpoint address of redis"
-  value       = module.redis.primary_endpoint_address
+  value       = module.redis.elastic_cache_redis_primary_endpoint_address
 }
 
 output "redis_subnet_group_name" {
   description = "Subnet group name of the elasticache-redis cluster"
-  value       = module.redis.redis_subnet_group_name
+  value       = module.redis.elastic_cache_redis_subnet_group_name
+
 }
 
 output "id_of_redis_cluster" {
   description = "ID of the elasticache-redis cluster"
-  value       = module.redis.id_of_redis_cluster
+  value       = module.redis.elastic_cache_redis_cluster_id
 }
 
 output "port_no" {
   description = "Port number of Redis"
-  value       = module.redis.port_no
+  value       = module.redis.elastic_cache_redis_port
 }
 
-output "elastic-cache-redis-endpoint" {
+output "elastic_cache_redis_endpoint" {
   description = "Elasticache-redis cluster primary endpoint address"
-  value       = module.redis.elastic-cache-redis-endpoint
+  value       = module.redis.elastic_cache_redis_endpoint
+}
+
+output "elastic_cache_redis_security_group" {
+  description = "The security group ID of the cluster"
+  value       = module.redis.elastic_cache_redis_security_group
+}
+
+output "auth_token_password" {
+  description = "Elasticache-redis auth token password(this password may be old, because Terraform doesn't track it after initial creation)"
+  value       = module.redis.auth_token_password
 }

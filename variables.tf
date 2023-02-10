@@ -4,12 +4,6 @@ variable "name" {
   type        = string
 }
 
-# variable "region" {
-#   description = "Name of your region"
-#   default     = ""
-#   type        = string
-# }
-
 variable "environment" {
   description = "The name of environment"
   default     = ""
@@ -48,11 +42,6 @@ variable "vpc_id" {
   default     = ""
   type        = string
 }
-
-# variable "parameter_group_name" {
-#   description = "The parameter group name"
-#   type        = string
-# }
 
 variable "engine_version" {
   description = "The redis engine version"
@@ -115,8 +104,8 @@ variable "allowed_security_groups" {
   type        = list(any)
 }
 
+variable "kms_key_arn" {
 
-variable "kms_key_id" {
   description = "The ARN of the key that you wish to use if encrypting at rest. If not supplied, uses service managed encryption. Can be specified only if at_rest_encryption_enabled = true"
   type        = string
   default     = ""
