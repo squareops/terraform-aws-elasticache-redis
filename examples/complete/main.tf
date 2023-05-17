@@ -13,10 +13,10 @@ locals {
 
 module "redis" {
   source                  = "git@github.com:sq-ia/terraform-aws-elasticache-redis.git"
-  environment             = local.environment
   name                    = local.name
   family                  = local.family
   node_type               = local.node_type
+  environment             = local.environment
   engine_version          = local.redis_engine_version
   num_cache_nodes         = 2
   vpc_id                  = local.vpc_id

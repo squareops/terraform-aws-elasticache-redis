@@ -69,7 +69,7 @@ variable "multi_az_enabled" {
 
 
 variable "availability_zones" {
-  description = "The list of AZs"
+  description = "The no. of AZs"
   default     = 2
   type        = string
 }

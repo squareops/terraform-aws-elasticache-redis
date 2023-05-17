@@ -5,9 +5,22 @@
 
 ### [SquareOps Technologies](https://squareops.com/) Your DevOps Partner for Accelerating cloud journey.
 <br>
-We publish several terraform modules.
-<br>
-Terraform Module to create Redis on AWS Cloud.
+This module is a Terraform module that provides an easy and efficient way to deploy and manage an Amazon ElastiCache Redis cluster in AWS. It simplifies the process of setting up a Redis cluster with customizable configurations, allowing you to focus on your application development and performance optimization.
+Features
+
+  1. Simple Configuration: The module offers a simple and intuitive configuration interface, allowing you to define your Redis cluster's properties, such as instance type, node count, subnet, security groups, and more.
+
+  2. Scalability: Easily scale your Redis cluster up or down by modifying the number of cache nodes, enabling you to meet the changing demands of your application.
+
+  3. High Availability: Enable multi-AZ deployment to achieve high availability and automatic failover in case of a node or zone failure. This ensures that your Redis cluster remains accessible and your data stays protected.
+
+  4. Flexible Networking: Choose the VPC and subnets where you want to deploy your Redis cluster, providing you with control over network access and integration with other resources in your AWS environment.
+
+  5. Encryption and Security: Enable encryption at rest with your own KMS key or use AWS-managed encryption. Control access to your Redis cluster using CIDR blocks and security groups, ensuring secure communication and data protection.
+
+  6. Backup and Recovery: Configure automated daily snapshots and set the retention period for backups. You can also specify a final snapshot for a smooth and controlled cluster termination process.
+
+  7. Logging and Monitoring: Easily configure logging destinations for slow logs and engine logs, allowing you to monitor the performance and troubleshoot any issues efficiently.
 
 ## Uses Example
 
@@ -18,19 +31,19 @@ module "redis" {
   environment     = "production"
   name            = "SKAF"
   family          = "redis6.x"
-  node_type       = "cache.t3.small"
-  num_cache_nodes = 2
-  engine_version  = "6.x"
+  vpc_id                     = "vpc-06eb7eskaf"
+  subnets                    = ["subnet-0bfa3eskaf","subnet-0140bskaf"]
+  node_type                  = "cache.t3.small"
+  kms_key_arn                = "arn:aws:kms:us-east-2:222222222222:key/kms_key_arn"
+  num_cache_nodes            = 2
+  engine_version             = "6.x"
+  multi_az_enabled           = false
   availability_zones         = 2
   automatic_failover_enabled = true
   snapshot_retention_limit   = 7
   at_rest_encryption_enabled = true
   transit_encryption_enabled = false
   notification_topic_arn     = null
-  vpc_id                     = "vpc-06eb7eskaf"
-  subnets                    = ["subnet-0bfa3eskaf","subnet-0140bskaf"]
-  kms_key_arn                = "arn:aws:kms:us-east-2:222222222222:key/kms_key_arn"
-  multi_az_enabled           = false
   allowed_security_groups    = [sg-0132a18skaf]
   maintenance_window         = "sun:09:00-sun:10:00"
   snapshot_window            = "07:00-08:00"
@@ -39,8 +52,7 @@ module "redis" {
 ```
 
 ## Important Note
-1. This module creates RDS security group.
-2. By default, the variable `create_random_password` is set to true. Therefore, even if the user provides a password, it will not be read. The `create_random_password` variable should be set to false and the `password` variable should have a non-null value to be read and used.
+1. By default, the variable `create_random_password` is set to true. Therefore, even if the user provides a password, it will not be read. The `create_random_password` variable should be set to false and the `password` variable should have a non-null value to be read and used.
 
 ## Security & Compliance [<img src="	https://prowler.pro/wp-content/themes/prowler-pro/assets/img/logo.svg" width="250" align="right" />](https://prowler.pro/)
 
