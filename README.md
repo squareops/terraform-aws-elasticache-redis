@@ -105,7 +105,7 @@ Security scanning is graciously provided by Prowler. Proowler is the leading ful
 | <a name="input_allowed_security_groups"></a> [allowed\_security\_groups](#input\_allowed\_security\_groups) | A list of Security Group ID's to allow access to | `list(any)` | `[]` | no |
 | <a name="input_at_rest_encryption_enabled"></a> [at\_rest\_encryption\_enabled](#input\_at\_rest\_encryption\_enabled) | (Optional) Whether to enable encryption at rest | `bool` | `true` | no |
 | <a name="input_automatic_failover_enabled"></a> [automatic\_failover\_enabled](#input\_automatic\_failover\_enabled) | Enable automatic failover | `bool` | `true` | no |
-| <a name="input_availability_zones"></a> [availability\_zones](#input\_availability\_zones) | The list of AZs | `string` | `2` | no |
+| <a name="input_availability_zones"></a> [availability\_zones](#input\_availability\_zones) | The no. of AZs | `string` | `2` | no |
 | <a name="input_engine_log_destination"></a> [engine\_log\_destination](#input\_engine\_log\_destination) | The destination for engine logs(eg. Cloudwatch log-group name or kinesis firehose stream name) | `string` | `null` | no |
 | <a name="input_engine_log_destination_type"></a> [engine\_log\_destination\_type](#input\_engine\_log\_destination\_type) | The type of destination for engine logs(eg . cloudwatch-logs or kinesis-firehose) | `string` | `""` | no |
 | <a name="input_engine_log_format"></a> [engine\_log\_format](#input\_engine\_log\_format) | the format for logs eg. json/text | `string` | `"json"` | no |
@@ -146,62 +146,35 @@ Security scanning is graciously provided by Prowler. Proowler is the leading ful
 | <a name="output_elastic_cache_redis_subnet_group_name"></a> [elastic\_cache\_redis\_subnet\_group\_name](#output\_elastic\_cache\_redis\_subnet\_group\_name) | Subnet group name of the elasticache\_redis cluster |
 <!-- END OF PRE-COMMIT-TERRAFORM DOCS HOOK -->
 
-## Contribution & Issue Reporting
-
-To contribute to a project, you can typically:
-
-  1. Find the repository on a platform like GitHub
-  2. Fork the repository to your own account
-  3. Make changes to the code
-  4. Submit a pull request to the original repository
+## Contribute & Issue Report
 
 To report an issue with a project:
 
-  1. Check the repository's [issue tracker](https://github.com/squareops/terraform-aws-vpc/issues) on GitHub
-  2. Search to see if the issue has already been reported
-  3. If you can't find an answer to your question in the documentation or issue tracker, you can ask a question by creating a new issue. Be sure to provide enough context and details so others can understand your problem.
-  4. Contributing to the project can be a great way to get involved and get help. The maintainers and other contributors may be more likely to help you if you're already making contributions to the project.
-
-## Our Other Projects
-
-We have a number of other projects that you might be interested in:
-
-  1. [terraform-aws-vpc](https://github.com/squareops/terraform-aws-vpc): Terraform module to create Networking resources for workload deployment on AWS Cloud.
-
-  2. [terraform-aws-keypair](https://github.com/squareops/terraform-aws-keypair): Terraform module which creates EC2 key pair on AWS. The private key will be stored on SSM.
-
-     Follow Us:
-
-     To stay updated on our projects and future release, follow us on
-     [GitHub](https://github.com/squareops/),
-     [LinkedIn](https://www.linkedin.com/company/squareops-technologies-pvt-ltd/)
-
-     By joining our both the [email](https://github.com/squareops) and [Slack community](https://github.com/squareops), you can benefit from the different ways in which we provide support. You can receive timely notifications and updates through email and engage in real-time conversations and discussions with other members through Slack. This combination of resources can help you stay informed, get help when you need it, and contribute to the project in a meaningful way.  
-
-## Security, Validation and pull-requests
-we have offered here high standard, quality code. Hence we are using several [pre-commit hooks](.pre-commit-config.yaml) and [GitHub Actions](https://gitlab.com/sq-ia/aws/eks/-/tree/v1.0.0#security-validation-and-pull-requests) as a workflow. So here we will create pull-requests to any branch and validate the request automatically using pre-commit tool.
+  1. Check the repository's [issue tracker](https://github.com/sq-ia/terraform-aws-elasticache-redis/issues) on GitHub
+  2. Search to check if the issue has already been reported
+  3. If you can't find an answer to your question in the documentation or issue tracker, you can ask a question by creating a new issue. Make sure to provide enough context and details.
 
 ## License
 
-Apache License, Version 2.0, January 2004 (http://www.apache.org/licenses/).
+Apache License, Version 2.0, January 2004 (https://www.apache.org/licenses/LICENSE-2.0)
 
 ## Support Us
 
-To support a GitHub project by liking it, you can follow these steps:
+To support our GitHub project by liking it, you can follow these steps:
 
-  1. Visit the repository: Navigate to the GitHub repository.
+  1. Visit the repository: Navigate to the [GitHub repository](https://github.com/sq-ia/terraform-aws-elasticache-redis)
 
-  2. Click the "Star" [button](https://github.com/squareops/terraform-aws-vpc): On the repository page, you'll see a "Star" button in the upper right corner. Clicking on it will star the repository, indicating your support for the project.
+  2. Click the "Star" button: On the repository page, you'll see a "Star" button in the upper right corner. Clicking on it will star the repository, indicating your support for the project.
 
   3. Optionally, you can also leave a comment on the repository or open an issue to give feedback or suggest changes.
 
-Starring a repository on GitHub is a simple way to show your support and appreciation for the project. It also helps to increase the visibility of the project and make it more discoverable to others.
+Staring a repository on GitHub is a simple way to show your support and appreciation for the project. It also helps to increase the visibility of the project and make it more discoverable to others.
 
 ## Who we are
 
 We believe that the key to success in the digital age is the ability to deliver value quickly and reliably. That’s why we offer a comprehensive range of DevOps & Cloud services designed to help your organization optimize its systems & Processes for speed and agility.
 
-  1. We are an AWS Advanced consulting partner which reflects our deep expertise in AWS Cloud and helping 100+ clients over the last 4 years.
+  1. We are an AWS Advanced consulting partner which reflects our deep expertise in AWS Cloud and helping 100+ clients over the last 5 years.
   2. Expertise in Kubernetes and overall container solution helps companies expedite their journey by 10X.
   3. Infrastructure Automation is a key component to the success of our Clients and our Expertise helps deliver the same in the shortest time.
   4. DevSecOps as a service to implement security within the overall DevOps process and helping companies deploy securely and at speed.
@@ -210,4 +183,4 @@ We believe that the key to success in the digital age is the ability to deliver 
 
 We provide [support](https://squareops.com/contact-us/) on all of our projects, no matter how small or large they may be.
 
-You can find more information about our company on this [squareops.com](https://squareops.com/), follow us on [linkdin](https://www.linkedin.com/company/squareops-technologies-pvt-ltd/), or fill out a [job application](https://squareops.com/careers/). If you have any questions or would like assistance with your cloud strategy and implementation, please don't hesitate to [contact us](https://squareops.com/contact-us/).
+To find more information about our company, visit [squareops.com](https://squareops.com/), follow us on [Linkedin](https://www.linkedin.com/company/squareops-technologies-pvt-ltd/), or fill out a [job application](https://squareops.com/careers/). If you have any questions or would like assistance with your cloud strategy and implementation, please don't hesitate to [contact us](https://squareops.com/contact-us/).
