@@ -57,7 +57,7 @@ variable "port" {
 
 variable "automatic_failover_enabled" {
   description = "Enable automatic failover "
-  default     = false
+  default     = true
   type        = bool
 }
 
@@ -69,9 +69,9 @@ variable "multi_az_enabled" {
 
 
 variable "availability_zones" {
-  description = "The list of AZs"
-  default     = []
-  type        = list(string)
+  description = "The no. of AZs"
+  default     = 2
+  type        = string
 }
 
 variable "snapshot_window" {
@@ -82,7 +82,7 @@ variable "snapshot_window" {
 
 variable "snapshot_retention_limit" {
   description = "The number of days for which ElastiCache will retain automatic cache cluster snapshots before deleting them. For example, if you set SnapshotRetentionLimit to 5, then a snapshot that was taken today will be retained for 5 days before being deleted. If the value of SnapshotRetentionLimit is set to zero (0), backups are turned off. Please note that setting a snapshot_retention_limit is not supported on cache.t1.micro or cache.t2.* cache nodes"
-  default     = 0
+  default     = 7
   type        = number
 }
 

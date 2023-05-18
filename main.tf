@@ -1,5 +1,3 @@
-
-
 locals {
   tags = {
     Environment = var.environment
@@ -7,6 +5,8 @@ locals {
   slow_log   = var.slow_log_destination == null ? [] : [1]
   engine_log = var.engine_log_destination == null ? [] : [1]
 }
+
+data "aws_availability_zones" "available" {}
 
 resource "random_password" "password" {
   length  = 16
@@ -40,7 +40,7 @@ resource "aws_elasticache_replication_group" "redis" {
   parameter_group_name       = join("", aws_elasticache_parameter_group.default.*.name) #var.parameter_group_name
   security_group_ids         = [module.security_group_redis.security_group_id]
   subnet_group_name          = aws_elasticache_subnet_group.elasticache.id
-  availability_zones         = var.availability_zones
+  availability_zones         = [for n in range(0, var.availability_zones) : data.aws_availability_zones.available.names[n]]
   automatic_failover_enabled = var.automatic_failover_enabled
   snapshot_window            = var.snapshot_window
   snapshot_retention_limit   = var.snapshot_retention_limit
