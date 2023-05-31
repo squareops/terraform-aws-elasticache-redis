@@ -17,7 +17,7 @@ locals {
 }
 
 module "redis" {
-  source                  = "squareops/elasticache-redis/aws"
+  source                  = "../../"
   name                    = local.name
   family                  = local.family
   node_type               = local.node_type

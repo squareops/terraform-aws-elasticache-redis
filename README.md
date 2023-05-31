@@ -50,6 +50,10 @@ module "redis" {
 }
 
 ```
+Refer [examples](https://github.com/squareops/terraform-aws-elasticache-redis/tree/main/examples/complete) for more details.
+
+ ## IAM Permissions
+The required IAM permissions to create resources from this module can be found [here](https://github.com/squareops/terraform-aws-elasticache-redis/blob/main/IAM.md)
 
 ## Important Note
 1. By default, the variable `create_random_password` is set to true. Therefore, even if the user provides a password, it will not be read. The `create_random_password` variable should be set to false and the `password` variable should have a non-null value to be read and used.
