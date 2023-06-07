@@ -1,5 +1,5 @@
 locals {
-  name                    = "skaf"
+  name                    = "redis"
   region                  = "us-east-1"
   family                  = "redis6.x"
   node_type               = "cache.t3.small"
@@ -9,10 +9,15 @@ locals {
   environment             = "prod"
   redis_engine_version    = "6.0"
   allowed_security_groups = ["sg-0e8dab08e40"]
+  additional_tags = {
+    Owner      = "Organization_Name"
+    Expires    = "Never"
+    Department = "Engineering"
+  }
 }
 
 module "redis" {
-  source                  = "git@github.com:sq-ia/terraform-aws-elasticache-redis.git"
+  source                  = "squareops/elasticache-redis/aws"
   name                    = local.name
   family                  = local.family
   node_type               = local.node_type

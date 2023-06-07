@@ -23,7 +23,7 @@ No providers.
 
 | Name | Source | Version |
 |------|--------|---------|
-| <a name="module_redis"></a> [redis](#module\_redis) | git@github.com:sq-ia/terraform-aws-elasticache-redis.git | n/a |
+| <a name="module_redis"></a> [redis](#module\_redis) | squareops/elasticache-redis/aws | n/a |
 
 ## Resources
 
