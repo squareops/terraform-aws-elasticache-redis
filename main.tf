@@ -30,29 +30,29 @@ resource "aws_elasticache_parameter_group" "default" {
 }
 
 resource "aws_elasticache_replication_group" "redis" {
-  replication_group_id       = "${var.environment}-${var.name}-redis"
-  port                       = var.port
-  engine                     = "redis"
-  node_type                  = var.node_type
-  description                = "Redis cluster for ${var.environment}-${var.name}-redis"
-  engine_version             = var.engine_version
-  num_cache_clusters         = var.num_cache_nodes
-  parameter_group_name       = join("", aws_elasticache_parameter_group.default.*.name) #var.parameter_group_name
-  security_group_ids         = [module.security_group_redis.security_group_id]
-  subnet_group_name          = aws_elasticache_subnet_group.elasticache.id
-  availability_zones         = [for n in range(0, var.availability_zones) : data.aws_availability_zones.available.names[n]]
-  snapshot_arns              = var.snapshot_arns
-  snapshot_window            = var.snapshot_window
-  snapshot_retention_limit   = var.snapshot_retention_limit
-  automatic_failover_enabled = var.automatic_failover_enabled
-  multi_az_enabled           = var.multi_az_enabled
-  kms_key_id                 = var.kms_key_arn
-  auth_token                 = var.transit_encryption_enabled ? random_password.password.result : null
-  at_rest_encryption_enabled = var.at_rest_encryption_enabled
-  transit_encryption_enabled = var.transit_encryption_enabled
-  notification_topic_arn     = var.notification_topic_arn
-  maintenance_window         = var.maintenance_window
-  final_snapshot_identifier  = var.final_snapshot_identifier
+  replication_group_id        = "${var.environment}-${var.name}-redis"
+  port                        = var.port
+  engine                      = "redis"
+  node_type                   = var.node_type
+  description                 = "Redis cluster for ${var.environment}-${var.name}-redis"
+  engine_version              = var.engine_version
+  num_cache_clusters          = var.num_cache_nodes
+  parameter_group_name        = join("", aws_elasticache_parameter_group.default.*.name) #var.parameter_group_name
+  security_group_ids          = [module.security_group_redis.security_group_id]
+  subnet_group_name           = aws_elasticache_subnet_group.elasticache.id
+  preferred_cache_cluster_azs = [for n in range(0, var.availability_zones) : data.aws_availability_zones.available.names[n]]
+  snapshot_arns               = var.snapshot_arns
+  snapshot_window             = var.snapshot_window
+  snapshot_retention_limit    = var.snapshot_retention_limit
+  automatic_failover_enabled  = var.automatic_failover_enabled
+  multi_az_enabled            = var.multi_az_enabled
+  kms_key_id                  = var.kms_key_arn
+  auth_token                  = var.transit_encryption_enabled ? random_password.password.result : null
+  at_rest_encryption_enabled  = var.at_rest_encryption_enabled
+  transit_encryption_enabled  = var.transit_encryption_enabled
+  notification_topic_arn      = var.notification_topic_arn
+  maintenance_window          = var.maintenance_window
+  final_snapshot_identifier   = var.final_snapshot_identifier
 
   dynamic "log_delivery_configuration" {
     for_each = local.slow_log
