@@ -181,3 +181,58 @@ variable "recovery_window_aws_secret" {
   type        = number
   description = "Number of days that AWS Secrets Manager waits before it can delete the secret. This value can be 0 to force deletion without recovery or range from 7 to 30 days."
 }
+
+variable "cloudwatch_metric_alarms_enabled" {
+  type        = bool
+  description = "Boolean flag to enable/disable CloudWatch metrics alarms"
+  default     = false
+}
+
+variable "alarm_cpu_threshold_percent" {
+  type        = number
+  default     = 75
+  description = "CPU threshold alarm level"
+}
+
+variable "alarm_actions" {
+  type        = list(string)
+  description = "Alarm action list"
+  default     = []
+}
+
+variable "ok_actions" {
+  type        = list(string)
+  description = "The list of actions to execute when this alarm transitions into an OK state from any other state. Each action is specified as an Amazon Resource Number (ARN)"
+  default     = []
+}
+
+variable "alarm_memory_threshold_bytes" {
+  # 10MB
+  type        = number
+  default     = 10000000
+  description = "Ram threshold alarm level in bytes"
+}
+
+variable "slack_webhook_url" {
+  description = "The Slack Webhook URL where notifications will be sent."
+  default     = ""
+  type        = string
+}
+
+variable "slack_channel" {
+  description = "The Slack channel where notifications will be posted."
+  default     = ""
+  type        = string
+}
+
+variable "slack_username" {
+  description = "The username to use when sending notifications to Slack."
+  default     = ""
+  type        = string
+}
+
+variable "cw_sns_topic_arn" {
+  description = "The username to use when sending notifications to Slack."
+  default     = ""
+  type        = string
+}
