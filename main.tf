@@ -214,10 +214,10 @@ resource "aws_kms_ciphertext" "slack_url" {
 }
 
 resource "aws_sns_topic" "slack_topic" {
-  count             = var.cloudwatch_metric_alarms_enabled ? 1 : 0
-  depends_on        = [aws_elasticache_replication_group.redis]
-  name              = format("%s-%s-%s", var.environment, var.name, "slack-topic")
-  delivery_policy   = <<EOF
+  count           = var.cloudwatch_metric_alarms_enabled ? 1 : 0
+  depends_on      = [aws_elasticache_replication_group.redis]
+  name            = format("%s-%s-%s", var.environment, var.name, "slack-topic")
+  delivery_policy = <<EOF
 {
   "http": {
     "defaultHealthyRetryPolicy": {
