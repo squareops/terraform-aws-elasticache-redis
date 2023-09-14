@@ -217,7 +217,6 @@ resource "aws_sns_topic" "slack_topic" {
   count             = var.cloudwatch_metric_alarms_enabled ? 1 : 0
   depends_on        = [aws_elasticache_replication_group.redis]
   name              = format("%s-%s-%s", var.environment, var.name, "slack-topic")
-  kms_master_key_id = aws_kms_key.this[0].key_id
   delivery_policy   = <<EOF
 {
   "http": {
