@@ -22,6 +22,9 @@ Features
 
   7. Logging and Monitoring: Easily configure logging destinations for slow logs and engine logs, allowing you to monitor the performance and troubleshoot any issues efficiently.
 
+  8. CloudWatch Alerts: Set up CloudWatch alarms to monitor the health and performance of your Redis cluster. Integrate these alarms with AWS Simple Notification Service (SNS) to receive real-time alerts. Use AWS Lambda functions to customize your alerting logic, and send notifications to Slack channels for immediate visibility into your Redis cluster's status.
+
+
 ## Uses Example
 
 ```hcl
@@ -31,22 +34,27 @@ module "redis" {
   environment     = "production"
   name            = "redis"
   family          = "redis6.x"
-  vpc_id                     = "vpc-06eb7eskaf"
-  subnets                    = ["subnet-0bfa3eskaf","subnet-0140bskaf"]
-  node_type                  = "cache.t3.small"
-  kms_key_arn                = "arn:aws:kms:us-east-2:222222222222:key/kms_key_arn"
-  num_cache_nodes            = 2
-  engine_version             = "6.x"
-  multi_az_enabled           = false
-  availability_zones         = 2
-  automatic_failover_enabled = true
-  snapshot_retention_limit   = 7
-  at_rest_encryption_enabled = true
-  transit_encryption_enabled = false
-  notification_topic_arn     = null
-  allowed_security_groups    = [sg-0132a18skaf]
-  snapshot_window            = "07:00-08:00"
-  maintenance_window         = "sun:09:00-sun:10:00"
+  vpc_id                           = "vpc-06eb7eskaf"
+  subnets                          = ["subnet-0bfa3eskaf","subnet-0140bskaf"]
+  node_type                        = "cache.t3.small"
+  kms_key_arn                      = "arn:aws:kms:us-east-2:222222222222:key/kms_key_arn"
+  num_cache_nodes                  = 2
+  engine_version                   = "6.x"
+  multi_az_enabled                 = false
+  availability_zones               = 2
+  automatic_failover_enabled       = true
+  snapshot_retention_limit         = 7
+  transit_encryption_enabled       = false
+  notification_topic_arn           = null
+  allowed_security_groups          = [sg-0132a18skaf]
+  snapshot_window                  = "07:00-08:00"
+  maintenance_window               = "sun:09:00-sun:10:00"
+  cloudwatch_metric_alarms_enabled = true  # For enabling basic alerting
+  alarm_cpu_threshold_percent      = 70
+  alarm_memory_threshold_bytes     = "10000000" # in bytes
+  slack_username                   = "john"
+  slack_channel                    = "redis-alerts"
+  slack_webhook_url                = "https://hooks.slack.com/services/xxxxxxxxx"
 }
 
 ```
@@ -79,6 +87,7 @@ Security scanning is graciously provided by Prowler. Proowler is the leading ful
 
 | Name | Version |
 |------|---------|
+| <a name="provider_archive"></a> [archive](#provider\_archive) | n/a |
 | <a name="provider_aws"></a> [aws](#provider\_aws) | >= 4.23 |
 | <a name="provider_random"></a> [random](#provider\_random) | >= 3.0.0 |
 
@@ -86,30 +95,44 @@ Security scanning is graciously provided by Prowler. Proowler is the leading ful
 
 | Name | Source | Version |
 |------|--------|---------|
+| <a name="module_cw_sns_slack"></a> [cw\_sns\_slack](#module\_cw\_sns\_slack) | ./lambda | n/a |
 | <a name="module_security_group_redis"></a> [security\_group\_redis](#module\_security\_group\_redis) | terraform-aws-modules/security-group/aws | 4.13.0 |
 
 ## Resources
 
 | Name | Type |
 |------|------|
+| [aws_cloudwatch_metric_alarm.cache_cpu](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/cloudwatch_metric_alarm) | resource |
+| [aws_cloudwatch_metric_alarm.cache_memory](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/cloudwatch_metric_alarm) | resource |
 | [aws_elasticache_parameter_group.default](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/elasticache_parameter_group) | resource |
 | [aws_elasticache_replication_group.redis](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/elasticache_replication_group) | resource |
 | [aws_elasticache_subnet_group.elasticache](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/elasticache_subnet_group) | resource |
+| [aws_kms_ciphertext.slack_url](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/kms_ciphertext) | resource |
+| [aws_kms_key.this](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/kms_key) | resource |
+| [aws_lambda_permission.sns_lambda_slack_invoke](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/lambda_permission) | resource |
 | [aws_secretsmanager_secret.secret_redis](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/secretsmanager_secret) | resource |
 | [aws_security_group_rule.cidr_ingress](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/security_group_rule) | resource |
 | [aws_security_group_rule.default_ingress](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/security_group_rule) | resource |
+| [aws_sns_topic.slack_topic](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/sns_topic) | resource |
+| [aws_sns_topic_subscription.slack-endpoint](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/sns_topic_subscription) | resource |
 | [random_password.password](https://registry.terraform.io/providers/hashicorp/random/latest/docs/resources/password) | resource |
+| [archive_file.lambdazip](https://registry.terraform.io/providers/hashicorp/archive/latest/docs/data-sources/file) | data source |
 | [aws_availability_zones.available](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/data-sources/availability_zones) | data source |
 
 ## Inputs
 
 | Name | Description | Type | Default | Required |
 |------|-------------|------|---------|:--------:|
+| <a name="input_alarm_actions"></a> [alarm\_actions](#input\_alarm\_actions) | Alarm action list | `list(string)` | `[]` | no |
+| <a name="input_alarm_cpu_threshold_percent"></a> [alarm\_cpu\_threshold\_percent](#input\_alarm\_cpu\_threshold\_percent) | CPU threshold alarm level | `number` | `75` | no |
+| <a name="input_alarm_memory_threshold_bytes"></a> [alarm\_memory\_threshold\_bytes](#input\_alarm\_memory\_threshold\_bytes) | Ram threshold alarm level in bytes | `number` | `10000000` | no |
 | <a name="input_allowed_cidr_blocks"></a> [allowed\_cidr\_blocks](#input\_allowed\_cidr\_blocks) | A list of CIDR blocks which are allowed to access the database | `list(any)` | `[]` | no |
 | <a name="input_allowed_security_groups"></a> [allowed\_security\_groups](#input\_allowed\_security\_groups) | A list of Security Group ID's to allow access to | `list(any)` | `[]` | no |
 | <a name="input_at_rest_encryption_enabled"></a> [at\_rest\_encryption\_enabled](#input\_at\_rest\_encryption\_enabled) | (Optional) Whether to enable encryption at rest | `bool` | `true` | no |
 | <a name="input_automatic_failover_enabled"></a> [automatic\_failover\_enabled](#input\_automatic\_failover\_enabled) | Enable automatic failover | `bool` | `true` | no |
 | <a name="input_availability_zones"></a> [availability\_zones](#input\_availability\_zones) | The no. of AZs | `string` | `2` | no |
+| <a name="input_cloudwatch_metric_alarms_enabled"></a> [cloudwatch\_metric\_alarms\_enabled](#input\_cloudwatch\_metric\_alarms\_enabled) | Boolean flag to enable/disable CloudWatch metrics alarms | `bool` | `false` | no |
+| <a name="input_cw_sns_topic_arn"></a> [cw\_sns\_topic\_arn](#input\_cw\_sns\_topic\_arn) | The username to use when sending notifications to Slack. | `string` | `""` | no |
 | <a name="input_engine_log_destination"></a> [engine\_log\_destination](#input\_engine\_log\_destination) | The destination for engine logs(eg. Cloudwatch log-group name or kinesis firehose stream name) | `string` | `null` | no |
 | <a name="input_engine_log_destination_type"></a> [engine\_log\_destination\_type](#input\_engine\_log\_destination\_type) | The type of destination for engine logs(eg . cloudwatch-logs or kinesis-firehose) | `string` | `""` | no |
 | <a name="input_engine_log_format"></a> [engine\_log\_format](#input\_engine\_log\_format) | the format for logs eg. json/text | `string` | `"json"` | no |
@@ -124,9 +147,13 @@ Security scanning is graciously provided by Prowler. Proowler is the leading ful
 | <a name="input_node_type"></a> [node\_type](#input\_node\_type) | The instance size of the redis cluster | `string` | `"cache.t3.micro"` | no |
 | <a name="input_notification_topic_arn"></a> [notification\_topic\_arn](#input\_notification\_topic\_arn) | (Optional) ARN of an SNS topic to send ElastiCache notifications | `string` | `null` | no |
 | <a name="input_num_cache_nodes"></a> [num\_cache\_nodes](#input\_num\_cache\_nodes) | The number of cache nodes | `number` | `1` | no |
+| <a name="input_ok_actions"></a> [ok\_actions](#input\_ok\_actions) | The list of actions to execute when this alarm transitions into an OK state from any other state. Each action is specified as an Amazon Resource Number (ARN) | `list(string)` | `[]` | no |
 | <a name="input_parameter_group_description"></a> [parameter\_group\_description](#input\_parameter\_group\_description) | Parameter group | `string` | `null` | no |
 | <a name="input_port"></a> [port](#input\_port) | The redis port | `number` | `6379` | no |
 | <a name="input_recovery_window_aws_secret"></a> [recovery\_window\_aws\_secret](#input\_recovery\_window\_aws\_secret) | Number of days that AWS Secrets Manager waits before it can delete the secret. This value can be 0 to force deletion without recovery or range from 7 to 30 days. | `number` | `0` | no |
+| <a name="input_slack_channel"></a> [slack\_channel](#input\_slack\_channel) | The Slack channel where notifications will be posted. | `string` | `""` | no |
+| <a name="input_slack_username"></a> [slack\_username](#input\_slack\_username) | The username to use when sending notifications to Slack. | `string` | `""` | no |
+| <a name="input_slack_webhook_url"></a> [slack\_webhook\_url](#input\_slack\_webhook\_url) | The Slack Webhook URL where notifications will be sent. | `string` | `""` | no |
 | <a name="input_slow_log_destination"></a> [slow\_log\_destination](#input\_slow\_log\_destination) | The destination for slow logs(eg. Cloudwatch log-group name or kinesis firehose stream name.) | `string` | `null` | no |
 | <a name="input_slow_log_destination_type"></a> [slow\_log\_destination\_type](#input\_slow\_log\_destination\_type) | The type of destination for slow logs(eg . cloudwatch-logs or kinesis-firehose) | `string` | `""` | no |
 | <a name="input_slow_log_format"></a> [slow\_log\_format](#input\_slow\_log\_format) | the format for logs eg. json/text | `string` | `"json"` | no |
