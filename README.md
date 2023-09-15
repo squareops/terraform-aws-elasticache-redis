@@ -22,6 +22,9 @@ Features
 
   7. Logging and Monitoring: Easily configure logging destinations for slow logs and engine logs, allowing you to monitor the performance and troubleshoot any issues efficiently.
 
+  8. CloudWatch Alerts: Set up CloudWatch alarms to monitor the health and performance of your Redis cluster. Integrate these alarms with AWS Simple Notification Service (SNS) to receive real-time alerts. Use AWS Lambda functions to customize your alerting logic, and send notifications to Slack channels for immediate visibility into your Redis cluster's status.
+
+
 ## Uses Example
 
 ```hcl
@@ -41,7 +44,6 @@ module "redis" {
   availability_zones               = 2
   automatic_failover_enabled       = true
   snapshot_retention_limit         = 7
-  at_rest_encryption_enabled       = true
   transit_encryption_enabled       = false
   notification_topic_arn           = null
   allowed_security_groups          = [sg-0132a18skaf]

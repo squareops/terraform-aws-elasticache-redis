@@ -48,7 +48,6 @@ resource "aws_elasticache_replication_group" "redis" {
   multi_az_enabled            = var.multi_az_enabled
   kms_key_id                  = var.kms_key_arn
   auth_token                  = var.transit_encryption_enabled ? random_password.password.result : null
-  at_rest_encryption_enabled  = var.at_rest_encryption_enabled
   transit_encryption_enabled  = var.transit_encryption_enabled
   notification_topic_arn      = var.notification_topic_arn
   maintenance_window          = var.maintenance_window
@@ -166,7 +165,7 @@ resource "aws_cloudwatch_metric_alarm" "cache_cpu" {
   }
 
   alarm_actions = [aws_sns_topic.slack_topic[0].arn]
-  ok_actions    = var.ok_actions
+  ok_actions    = [aws_sns_topic.slack_topic[0].arn]
   depends_on    = [aws_sns_topic.slack_topic]
 
   tags = merge(
@@ -193,7 +192,7 @@ resource "aws_cloudwatch_metric_alarm" "cache_memory" {
   }
 
   alarm_actions = [aws_sns_topic.slack_topic[0].arn]
-  ok_actions    = var.ok_actions
+  ok_actions    = [aws_sns_topic.slack_topic[0].arn]
   depends_on    = [aws_sns_topic.slack_topic]
 
   tags = merge(
