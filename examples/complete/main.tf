@@ -3,7 +3,6 @@ locals {
   region                  = "us-east-2"
   family                  = "redis6.x"
   node_type               = "cache.t3.small"
-  vpc_id                  = "vpc-0220830b5260698db"
   vpc_cidr                = "10.0.0.0/16"
   allowed_security_groups = ["sg-09b5da32f11bc36f"]
   environment             = "prod"
@@ -53,8 +52,7 @@ module "kms" {
         {
           type = "Service"
           identifiers = [
-            "monitoring.rds.amazonaws.com",
-            "rds.amazonaws.com",
+            "elasticache.amazonaws.com"
           ]
         }
       ]

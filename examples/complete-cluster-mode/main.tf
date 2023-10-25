@@ -53,8 +53,7 @@ module "kms" {
         {
           type = "Service"
           identifiers = [
-            "monitoring.rds.amazonaws.com",
-            "rds.amazonaws.com",
+            "elasticache.amazonaws.com"
           ]
         }
       ]
