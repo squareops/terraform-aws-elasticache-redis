@@ -1,4 +1,4 @@
-## Redis Example With CLuster Mode Enable
+## Redis Example With Cluster Mode Enable
 ![squareops_avatar]
 
 [squareops_avatar]: https://squareops.com/wp-content/uploads/2022/12/squareops-logo.png
