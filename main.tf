@@ -6,9 +6,8 @@ locals {
   engine_log = var.engine_log_destination == null ? [] : [1]
 }
 
-data "aws_availability_zones" "available" {}
-
 resource "random_password" "password" {
+  count   = var.transit_encryption_enabled ? 1 : 0
   length  = 16
   special = false
 }
@@ -27,6 +26,13 @@ resource "aws_elasticache_parameter_group" "default" {
       description,
     ]
   }
+  dynamic "parameter" {
+    for_each = var.cluster_mode_enabled ? concat([{ name = "cluster-enabled", value = "yes" }], var.parameter) : var.parameter
+    content {
+      name  = parameter.value.name
+      value = tostring(parameter.value.value)
+    }
+  }
 }
 
 resource "aws_elasticache_replication_group" "redis" {
@@ -36,22 +42,25 @@ resource "aws_elasticache_replication_group" "redis" {
   node_type                   = var.node_type
   description                 = "Redis cluster for ${var.environment}-${var.name}-redis"
   engine_version              = var.engine_version
-  num_cache_clusters          = var.num_cache_nodes
+  num_cache_clusters          = var.cluster_mode_enabled ? null : var.num_cache_nodes
   parameter_group_name        = join("", aws_elasticache_parameter_group.default.*.name) #var.parameter_group_name
   security_group_ids          = [module.security_group_redis.security_group_id]
   subnet_group_name           = aws_elasticache_subnet_group.elasticache.id
-  preferred_cache_cluster_azs = [for n in range(0, var.availability_zones) : data.aws_availability_zones.available.names[n]]
+  preferred_cache_cluster_azs = length(var.availability_zones) == 0 ? null : [for n in range(0, var.num_cache_nodes) : element(var.availability_zones, n)]
   snapshot_arns               = var.snapshot_arns
   snapshot_window             = var.snapshot_window
   snapshot_retention_limit    = var.snapshot_retention_limit
-  automatic_failover_enabled  = var.automatic_failover_enabled
+  automatic_failover_enabled  = var.cluster_mode_enabled ? true : var.automatic_failover_enabled
   multi_az_enabled            = var.multi_az_enabled
-  kms_key_id                  = var.kms_key_arn
-  auth_token                  = var.transit_encryption_enabled ? random_password.password.result : null
-  transit_encryption_enabled  = var.transit_encryption_enabled
+  at_rest_encryption_enabled  = var.at_rest_encryption_enabled
+  kms_key_id                  = var.at_rest_encryption_enabled ? var.kms_key_arn : null
+  auth_token                  = var.transit_encryption_enabled ? random_password.password[0].result : null
+  transit_encryption_enabled  = var.transit_encryption_enabled ? var.transit_encryption_enabled || random_password.password[0].result != null : false
   notification_topic_arn      = var.notification_topic_arn
   maintenance_window          = var.maintenance_window
   final_snapshot_identifier   = var.final_snapshot_identifier
+  num_node_groups             = var.cluster_mode_enabled ? var.cluster_mode_num_node_groups : null
+  replicas_per_node_group     = var.cluster_mode_enabled ? var.cluster_mode_replicas_per_node_group : null
 
   dynamic "log_delivery_configuration" {
     for_each = local.slow_log
@@ -78,6 +87,7 @@ resource "aws_elasticache_replication_group" "redis" {
     Environment = var.environment
   }
 }
+
 
 resource "aws_elasticache_subnet_group" "elasticache" {
   name        = "${var.environment}-${var.name}-redis"
@@ -144,6 +154,16 @@ resource "aws_secretsmanager_secret" "secret_redis" {
     local.tags,
   )
   recovery_window_in_days = var.recovery_window_aws_secret
+}
+
+resource "aws_secretsmanager_secret_version" "redis_credentials" {
+  count         = var.transit_encryption_enabled ? 1 : 0
+  secret_id     = aws_secretsmanager_secret.secret_redis[0].id
+  secret_string = <<EOF
+{
+  "password": "${random_password.password[0].result}"
+}
+EOF
 }
 
 # Cloudwatch alarms
@@ -238,6 +258,7 @@ EOF
 }
 
 data "archive_file" "lambdazip" {
+  count       = var.cloudwatch_metric_alarms_enabled ? 1 : 0
   type        = "zip"
   output_path = "${path.module}/lambda/sns_slack.zip"
 
@@ -246,8 +267,8 @@ data "archive_file" "lambdazip" {
 
 
 module "cw_sns_slack" {
-  source = "./lambda"
-
+  source        = "./lambda"
+  count         = var.cloudwatch_metric_alarms_enabled ? 1 : 0
   name          = format("%s-%s-%s", var.environment, var.name, "sns-slack")
   description   = "notify slack channel on sns topic"
   artifact_file = "${path.module}/lambda/sns_slack.zip"
@@ -267,16 +288,18 @@ module "cw_sns_slack" {
 }
 
 resource "aws_sns_topic_subscription" "slack-endpoint" {
-  endpoint               = module.cw_sns_slack.arn
+  count                  = var.cloudwatch_metric_alarms_enabled ? 1 : 0
+  endpoint               = module.cw_sns_slack[0].arn
   protocol               = "lambda"
   endpoint_auto_confirms = true
   topic_arn              = aws_sns_topic.slack_topic[0].arn
 }
 
 resource "aws_lambda_permission" "sns_lambda_slack_invoke" {
+  count         = var.cloudwatch_metric_alarms_enabled ? 1 : 0
   statement_id  = "sns_slackAllowExecutionFromSNS"
   action        = "lambda:InvokeFunction"
-  function_name = module.cw_sns_slack.arn
+  function_name = module.cw_sns_slack[0].arn
   principal     = "sns.amazonaws.com"
   source_arn    = aws_sns_topic.slack_topic[0].arn
 }

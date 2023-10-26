@@ -4,16 +4,17 @@ locals {
   family                  = "redis6.x"
   node_type               = "cache.t3.small"
   vpc_cidr                = "10.0.0.0/16"
-  allowed_security_groups = ["sg-09b5da32f11bc36f"]
   environment             = "prod"
+  allowed_security_groups = ["sg-02c3f55874f6e0c64"]
   redis_engine_version    = "6.0"
   additional_tags = {
     Owner      = "Organization_Name"
     Expires    = "Never"
     Department = "Engineering"
   }
-  current_identity   = data.aws_caller_identity.current.arn
+  current_identity           = data.aws_caller_identity.current.arn
   availability_zones = slice(data.aws_availability_zones.primary.names, 0, 3)
+  cluster_mode_enabled = true
 }
 
 data "aws_availability_zones" "primary" {}
@@ -102,7 +103,9 @@ module "redis" {
   node_type                        = local.node_type
   environment                      = local.environment
   engine_version                   = local.redis_engine_version
-  num_cache_nodes                  = 2
+  cluster_mode_enabled             = local.cluster_mode_enabled
+  cluster_mode_num_node_groups     = 1
+  cluster_mode_replicas_per_node_group = 2
   vpc_id                           = module.vpc.vpc_id
   subnets                          = module.vpc.database_subnets
   kms_key_arn                      = module.kms.key_arn

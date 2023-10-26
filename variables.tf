@@ -24,6 +24,16 @@ variable "parameter_group_description" {
   default     = null
   type        = string
 }
+
+variable "parameter" {
+  description = "A list of Redis parameters to apply. It can be different based on mode slection."
+  type = list(object({
+    name  = string
+    value = string
+  }))
+  default = []
+}
+
 variable "num_cache_nodes" {
   description = "The number of cache nodes"
   default     = 1
@@ -35,7 +45,6 @@ variable "subnets" {
   default     = []
   type        = list(string)
 }
-
 
 variable "vpc_id" {
   description = "The vpc where we will put the redis cluster"
@@ -70,8 +79,8 @@ variable "multi_az_enabled" {
 
 variable "availability_zones" {
   description = "The no. of AZs"
-  default     = 2
-  type        = string
+  default     = []
+  type        = list(string)
 }
 
 variable "snapshot_window" {
@@ -105,7 +114,6 @@ variable "allowed_security_groups" {
 }
 
 variable "kms_key_arn" {
-
   description = "The ARN of the key that you wish to use if encrypting at rest. If not supplied, uses service managed encryption. Can be specified only if at_rest_encryption_enabled = true"
   type        = string
   default     = ""
@@ -235,4 +243,22 @@ variable "cw_sns_topic_arn" {
   description = "The username to use when sending notifications to Slack."
   default     = ""
   type        = string
+}
+
+variable "cluster_mode_enabled" {
+  type        = bool
+  description = "Whether to enable/disable creation of a native redis cluster."
+  default     = false
+}
+
+variable "cluster_mode_replicas_per_node_group" {
+  type        = number
+  description = "Number of replica nodes in each node group. Valid values are between 0 to 5."
+  default     = 0
+}
+
+variable "cluster_mode_num_node_groups" {
+  type        = number
+  description = "Number of node groups (shards) for this Redis replication group."
+  default     = 0
 }
