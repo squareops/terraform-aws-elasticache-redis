@@ -117,6 +117,7 @@ module "redis" {
   cloudwatch_metric_alarms_enabled = false
   alarm_cpu_threshold_percent      = 70
   alarm_memory_threshold_bytes     = "10000000" # in bytes
+  slack_notification_enabled       = false
   slack_username                   = ""
   slack_channel                    = ""
   slack_webhook_url                = ""
