@@ -222,12 +222,12 @@ resource "aws_cloudwatch_metric_alarm" "cache_memory" {
 }
 
 resource "aws_kms_key" "this" {
-  count       = var.cloudwatch_metric_alarms_enabled ? 1 : 0
+  count       = var.slack_notification_enabled ? 1 : 0
   description = "KMS key for notify-slack test"
 }
 
 resource "aws_kms_ciphertext" "slack_url" {
-  count     = var.cloudwatch_metric_alarms_enabled ? 1 : 0
+  count     = var.slack_notification_enabled ? 1 : 0
   plaintext = var.slack_webhook_url
   key_id    = aws_kms_key.this[0].arn
 }
@@ -258,7 +258,7 @@ EOF
 }
 
 data "archive_file" "lambdazip" {
-  count       = var.cloudwatch_metric_alarms_enabled ? 1 : 0
+  count       = var.slack_notification_enabled ? 1 : 0
   type        = "zip"
   output_path = "${path.module}/lambda/sns_slack.zip"
 
@@ -268,7 +268,7 @@ data "archive_file" "lambdazip" {
 
 module "cw_sns_slack" {
   source        = "./lambda"
-  count         = var.cloudwatch_metric_alarms_enabled ? 1 : 0
+  count         = var.slack_notification_enabled ? 1 : 0
   name          = format("%s-%s-%s", var.environment, var.name, "sns-slack")
   description   = "notify slack channel on sns topic"
   artifact_file = "${path.module}/lambda/sns_slack.zip"
@@ -288,7 +288,7 @@ module "cw_sns_slack" {
 }
 
 resource "aws_sns_topic_subscription" "slack-endpoint" {
-  count                  = var.cloudwatch_metric_alarms_enabled ? 1 : 0
+  count                  = var.slack_notification_enabled ? 1 : 0
   endpoint               = module.cw_sns_slack[0].arn
   protocol               = "lambda"
   endpoint_auto_confirms = true
@@ -296,7 +296,7 @@ resource "aws_sns_topic_subscription" "slack-endpoint" {
 }
 
 resource "aws_lambda_permission" "sns_lambda_slack_invoke" {
-  count         = var.cloudwatch_metric_alarms_enabled ? 1 : 0
+  count         = var.slack_notification_enabled ? 1 : 0
   statement_id  = "sns_slackAllowExecutionFromSNS"
   action        = "lambda:InvokeFunction"
   function_name = module.cw_sns_slack[0].arn
