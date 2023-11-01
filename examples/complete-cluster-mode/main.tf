@@ -12,8 +12,8 @@ locals {
     Expires    = "Never"
     Department = "Engineering"
   }
-  current_identity           = data.aws_caller_identity.current.arn
-  availability_zones = slice(data.aws_availability_zones.primary.names, 0, 3)
+  current_identity     = data.aws_caller_identity.current.arn
+  availability_zones   = slice(data.aws_availability_zones.primary.names, 0, 3)
   cluster_mode_enabled = true
 }
 
@@ -97,28 +97,28 @@ module "vpc" {
 }
 
 module "redis" {
-  source                           = "squareops/elasticache-redis/aws"
-  name                             = local.name
-  family                           = local.family
-  node_type                        = local.node_type
-  environment                      = local.environment
-  engine_version                   = local.redis_engine_version
-  cluster_mode_enabled             = local.cluster_mode_enabled
-  cluster_mode_num_node_groups     = 1
+  source                               = "squareops/elasticache-redis/aws"
+  name                                 = local.name
+  family                               = local.family
+  node_type                            = local.node_type
+  environment                          = local.environment
+  engine_version                       = local.redis_engine_version
+  cluster_mode_enabled                 = local.cluster_mode_enabled
+  cluster_mode_num_node_groups         = 1
   cluster_mode_replicas_per_node_group = 2
-  vpc_id                           = module.vpc.vpc_id
-  subnets                          = module.vpc.database_subnets
-  kms_key_arn                      = module.kms.key_arn
-  multi_az_enabled                 = true
-  availability_zones               = local.availability_zones
-  snapshot_window                  = "07:00-08:00"
-  maintenance_window               = "sun:09:00-sun:10:00"
-  allowed_security_groups          = local.allowed_security_groups
-  cloudwatch_metric_alarms_enabled = false
-  alarm_cpu_threshold_percent      = 70
-  alarm_memory_threshold_bytes     = "10000000" # in bytes
-  slack_notification_enabled       = false
-  slack_username                   = ""
-  slack_channel                    = ""
-  slack_webhook_url                = ""
+  vpc_id                               = module.vpc.vpc_id
+  subnets                              = module.vpc.database_subnets
+  kms_key_arn                          = module.kms.key_arn
+  multi_az_enabled                     = true
+  availability_zones                   = local.availability_zones
+  snapshot_window                      = "07:00-08:00"
+  maintenance_window                   = "sun:09:00-sun:10:00"
+  allowed_security_groups              = local.allowed_security_groups
+  cloudwatch_metric_alarms_enabled     = false
+  alarm_cpu_threshold_percent          = 70
+  alarm_memory_threshold_bytes         = "10000000" # in bytes
+  slack_notification_enabled           = false
+  slack_username                       = ""
+  slack_channel                        = ""
+  slack_webhook_url                    = ""
 }

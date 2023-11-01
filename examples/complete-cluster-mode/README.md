@@ -17,17 +17,25 @@ This example will be very useful for users who are new to a module and want to q
 
 ## Providers
 
-No providers.
+| Name | Version |
+|------|---------|
+| <a name="provider_aws"></a> [aws](#provider\_aws) | >= 3.63 |
 
 ## Modules
 
 | Name | Source | Version |
 |------|--------|---------|
+| <a name="module_kms"></a> [kms](#module\_kms) | terraform-aws-modules/kms/aws | n/a |
 | <a name="module_redis"></a> [redis](#module\_redis) | squareops/elasticache-redis/aws | n/a |
+| <a name="module_vpc"></a> [vpc](#module\_vpc) | squareops/vpc/aws | 3.3.1 |
 
 ## Resources
 
-No resources.
+| Name | Type |
+|------|------|
+| [aws_availability_zones.primary](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/data-sources/availability_zones) | data source |
+| [aws_caller_identity.current](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/data-sources/caller_identity) | data source |
+| [aws_region.current](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/data-sources/region) | data source |
 
 ## Inputs
 
@@ -38,7 +46,7 @@ No inputs.
 | Name | Description |
 |------|-------------|
 | <a name="output_auth_token_password"></a> [auth\_token\_password](#output\_auth\_token\_password) | Elasticache-redis auth token password(this password may be old, because Terraform doesn't track it after initial creation) |
-| <a name="output_elastic_cache_redis_endpoint"></a> [elastic\_cache\_redis\_endpoint](#output\_elastic\_cache\_redis\_endpoint) | Elasticache-redis cluster primary endpoint address |
+| <a name="output_elastic_cache_redis_reader_endpoint"></a> [elastic\_cache\_redis\_reader\_endpoint](#output\_elastic\_cache\_redis\_reader\_endpoint) | Elasticache-redis cluster primary endpoint address |
 | <a name="output_elastic_cache_redis_security_group"></a> [elastic\_cache\_redis\_security\_group](#output\_elastic\_cache\_redis\_security\_group) | The security group ID of the cluster |
 | <a name="output_id_of_redis_cluster"></a> [id\_of\_redis\_cluster](#output\_id\_of\_redis\_cluster) | ID of the elasticache-redis cluster |
 | <a name="output_port_no"></a> [port\_no](#output\_port\_no) | Port number of Redis |
