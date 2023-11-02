@@ -114,10 +114,10 @@ module "redis" {
   snapshot_window                      = "07:00-08:00"
   maintenance_window                   = "sun:09:00-sun:10:00"
   allowed_security_groups              = local.allowed_security_groups
-  cloudwatch_metric_alarms_enabled     = false
+  cloudwatch_metric_alarms_enabled     = true
   alarm_cpu_threshold_percent          = 70
   alarm_memory_threshold_bytes         = "10000000" # in bytes
-  slack_notification_enabled           = false
+  slack_notification_enabled           = true
   slack_username                       = ""
   slack_channel                        = ""
   slack_webhook_url                    = ""
