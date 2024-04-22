@@ -14,6 +14,12 @@ output "id_of_redis_cluster" {
   value       = module.redis.elastic_cache_redis_cluster_id
 }
 
+output "redis_member_clusters" {
+  description = "Subnet group name of the elasticache-redis cluster"
+  value       = module.redis.elastic_cache_redis_member_clusters
+
+}
+
 output "port_no" {
   description = "Port number of Redis"
   value       = module.redis.elastic_cache_redis_port

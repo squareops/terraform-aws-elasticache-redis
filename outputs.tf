@@ -32,3 +32,8 @@ output "auth_token_password" {
   description = "Elasticache-redis auth token password(this password may be old, because Terraform doesn't track it after initial creation)"
   value       = var.transit_encryption_enabled ? nonsensitive(random_password.password[0].result) : null
 }
+
+output "elastic_cache_redis_member_clusters" {
+  description = "ID of the elasticache-redis cluster"
+  value       = flatten(aws_elasticache_replication_group.redis.member_clusters)
+}

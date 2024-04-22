@@ -9,6 +9,12 @@ output "redis_subnet_group_name" {
 
 }
 
+output "redis_member_clusters" {
+  description = "Subnet group name of the elasticache-redis cluster"
+  value       = module.redis.elastic_cache_redis_member_clusters
+
+}
+
 output "id_of_redis_cluster" {
   description = "ID of the elasticache-redis cluster"
   value       = module.redis.elastic_cache_redis_cluster_id
