@@ -1,10 +1,10 @@
 locals {
   name                    = "redis"
-  region                  = "us-east-2"
+  region                  = "us-west-2"
   family                  = "redis6.x"
   node_type               = "cache.t3.small"
   vpc_cidr                = "10.0.0.0/16"
-  allowed_security_groups = ["sg-09b5da32f11bc36f"]
+  allowed_security_groups = ["sg-0412fe49"]
   environment             = "prod"
   redis_engine_version    = "6.0"
   additional_tags = {
@@ -96,7 +96,7 @@ module "vpc" {
 }
 
 module "redis" {
-  source                           = "squareops/elasticache-redis/aws"
+  source                           = "../.."
   name                             = local.name
   family                           = local.family
   node_type                        = local.node_type
@@ -114,7 +114,7 @@ module "redis" {
   cloudwatch_metric_alarms_enabled = true
   alarm_cpu_threshold_percent      = 70
   alarm_memory_threshold_bytes     = "10000000" # in bytes
-  slack_notification_enabled       = true
+  slack_notification_enabled       = false
   slack_username                   = ""
   slack_channel                    = ""
   slack_webhook_url                = ""
