@@ -35,14 +35,56 @@ resource "aws_elasticache_parameter_group" "default" {
   }
 }
 
+resource "aws_elasticache_cluster" "redis" {
+  count               = var.num_cache_nodes == 1 ? 1 : 0  # Only create if num_cache_nodes == 1
+  cluster_id          = "${var.environment}-${var.name}-standalone-redis"
+  engine              = "redis"
+  engine_version      = var.engine_version
+  node_type           = var.node_type
+  num_cache_nodes     = 1  # Standalone Redis can have only 1 node
+  port                = var.port
+  parameter_group_name = join("", aws_elasticache_parameter_group.default.*.name)
+  security_group_ids  = [module.security_group_redis.security_group_id]
+  subnet_group_name   = aws_elasticache_subnet_group.elasticache.id
+  snapshot_window     = var.snapshot_window
+  snapshot_retention_limit = var.snapshot_retention_limit
+
+
+  dynamic "log_delivery_configuration" {
+    for_each = local.slow_log
+    content {
+      log_type         = "slow-log"
+      log_format       = var.slow_log_format
+      destination      = var.slow_log_destination
+      destination_type = var.slow_log_destination_type
+    }
+  }
+
+  dynamic "log_delivery_configuration" {
+    for_each = local.engine_log
+    content {
+      log_type         = "engine-log"
+      log_format       = var.engine_log_format
+      destination      = var.engine_log_destination
+      destination_type = var.engine_log_destination_type
+    }
+  }
+
+  tags = {
+    Name        = "${var.environment}-${var.name}"
+    Environment = var.environment
+  }
+}
+
 resource "aws_elasticache_replication_group" "redis" {
-  replication_group_id        = "${var.environment}-${var.name}-redis"
+  count                       = var.num_cache_nodes > 1 ? 1 : 0  # Only create if num_cache_nodes > 1
+  replication_group_id        = "${var.environment}-${var.name}-cluster"
   port                        = var.port
   engine                      = "redis"
   node_type                   = var.node_type
   description                 = "Redis cluster for ${var.environment}-${var.name}-redis"
   engine_version              = var.engine_version
-  num_cache_clusters          = var.cluster_mode_enabled ? null : var.num_cache_nodes
+  num_cache_clusters          = var.num_cache_nodes # Standalone Redis has 1 node
   parameter_group_name        = join("", aws_elasticache_parameter_group.default.*.name) #var.parameter_group_name
   security_group_ids          = [module.security_group_redis.security_group_id]
   subnet_group_name           = aws_elasticache_subnet_group.elasticache.id
@@ -50,7 +92,7 @@ resource "aws_elasticache_replication_group" "redis" {
   snapshot_arns               = var.snapshot_arns
   snapshot_window             = var.snapshot_window
   snapshot_retention_limit    = var.snapshot_retention_limit
-  automatic_failover_enabled  = var.cluster_mode_enabled ? true : var.automatic_failover_enabled
+  automatic_failover_enabled  = var.multi_az_enabled ? true : false
   multi_az_enabled            = var.multi_az_enabled
   at_rest_encryption_enabled  = var.at_rest_encryption_enabled
   kms_key_id                  = var.at_rest_encryption_enabled ? var.kms_key_arn : null
@@ -177,11 +219,10 @@ resource "aws_cloudwatch_metric_alarm" "cache_cpu" {
   namespace           = "AWS/ElastiCache"
   period              = "300"
   statistic           = "Average"
-
-  threshold = var.alarm_cpu_threshold_percent
+  threshold           = var.alarm_cpu_threshold_percent
 
   dimensions = {
-    CacheClusterId = aws_elasticache_replication_group.redis.id
+    CacheClusterId = var.num_cache_nodes > 1 ? aws_elasticache_replication_group.redis[count.index].id : aws_elasticache_cluster.redis[0].id
   }
 
   alarm_actions = [aws_sns_topic.slack_topic[0].arn]
@@ -204,11 +245,10 @@ resource "aws_cloudwatch_metric_alarm" "cache_memory" {
   namespace           = "AWS/ElastiCache"
   period              = "60"
   statistic           = "Average"
-
-  threshold = var.alarm_memory_threshold_bytes
+  threshold           = var.alarm_memory_threshold_bytes
 
   dimensions = {
-    CacheClusterId = aws_elasticache_replication_group.redis.id
+    CacheClusterId = var.num_cache_nodes > 1 ? aws_elasticache_replication_group.redis[count.index].id : aws_elasticache_cluster.redis[0].id
   }
 
   alarm_actions = [aws_sns_topic.slack_topic[0].arn]

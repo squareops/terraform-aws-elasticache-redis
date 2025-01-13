@@ -102,7 +102,7 @@ module "redis" {
   node_type                        = local.node_type
   environment                      = local.environment
   engine_version                   = local.redis_engine_version
-  num_cache_nodes                  = 2
+  num_cache_nodes                  = 2 # Set count 1 for standalone mode
   vpc_id                           = module.vpc.vpc_id
   subnets                          = module.vpc.database_subnets
   kms_key_arn                      = module.kms.key_arn

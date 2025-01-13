@@ -5,12 +5,12 @@ output "elastic_cache_redis_primary_endpoint_address" {
 }
 output "elastic_cache_redis_subnet_group_name" {
   description = "Subnet group name of the elasticache_redis cluster"
-  value       = aws_elasticache_subnet_group.elasticache.name
+  value = var.num_cache_nodes > 1 ? aws_elasticache_replication_group.redis[0].id : aws_elasticache_cluster.redis[0].id
 }
 
 output "elastic_cache_redis_cluster_id" {
   description = "ID of the elasticache-redis cluster"
-  value       = aws_elasticache_replication_group.redis.id
+  value       = var.num_cache_nodes > 1 ? aws_elasticache_replication_group.redis[0].id : aws_elasticache_cluster.redis[0].id
 }
 
 output "elastic_cache_redis_port" {
@@ -35,5 +35,5 @@ output "auth_token_password" {
 
 output "elastic_cache_redis_member_clusters" {
   description = "ID of the elasticache-redis cluster"
-  value       = flatten(aws_elasticache_replication_group.redis.member_clusters)
+  value       = (var.num_cache_nodes > 1 ? flatten(aws_elasticache_replication_group.redis[0].member_clusters) : aws_elasticache_cluster.redis[0].id)
 }

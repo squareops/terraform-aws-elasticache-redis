@@ -66,7 +66,7 @@ variable "port" {
 
 variable "automatic_failover_enabled" {
   description = "Enable automatic failover "
-  default     = true
+  default     = false
   type        = bool
 }
 
