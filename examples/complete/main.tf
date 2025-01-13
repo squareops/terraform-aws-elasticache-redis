@@ -1,6 +1,6 @@
 locals {
   name                    = "redis"
-  region                  = "us-west-2"
+  region                  = "us-east-1"
   family                  = "redis6.x"
   node_type               = "cache.t3.small"
   vpc_cidr                = "10.0.0.0/16"
@@ -114,6 +114,11 @@ module "redis" {
   cloudwatch_metric_alarms_enabled = true
   alarm_cpu_threshold_percent      = 70
   alarm_memory_threshold_bytes     = "10000000" # in bytes
+  alarm_eviction_threshold         = 1000
+  alarm_connections_threshold      = 100
+  alarm_replication_lag_threshold  = 10
+  alarm_cache_hits_threshold       = 1000
+  alarm_cache_misses_threshold     = 50
   slack_notification_enabled       = false
   slack_username                   = ""
   slack_channel                    = ""

@@ -261,6 +261,141 @@ resource "aws_cloudwatch_metric_alarm" "cache_memory" {
   )
 }
 
+# Alarm for Evictions
+resource "aws_cloudwatch_metric_alarm" "cache_evictions" {
+  count               = var.cloudwatch_metric_alarms_enabled ? 1 : 0
+  alarm_name          = format("%s-%s-%s", var.environment, var.name, "evictions")
+  alarm_description   = "Redis evictions due to memory pressure"
+  comparison_operator = "GreaterThanThreshold"
+  evaluation_periods  = "1"
+  metric_name         = "Evictions"
+  namespace           = "AWS/ElastiCache"
+  period              = "300"
+  statistic           = "Sum"
+  threshold           = var.alarm_eviction_threshold
+
+  dimensions = {
+    CacheClusterId = var.num_cache_nodes > 1 ? aws_elasticache_replication_group.redis[count.index].id : aws_elasticache_cluster.redis[0].id
+  }
+
+  alarm_actions = [aws_sns_topic.slack_topic[0].arn]
+  ok_actions    = [aws_sns_topic.slack_topic[0].arn]
+  depends_on    = [aws_sns_topic.slack_topic]
+
+  tags = merge(
+    { "Name" = format("%s-%s-%s", var.environment, var.name, "eviction_metric") },
+    local.tags,
+  )
+}
+
+# Alarm for Connections
+resource "aws_cloudwatch_metric_alarm" "cache_connections" {
+  count               = var.cloudwatch_metric_alarms_enabled ? 1 : 0
+  alarm_name          = format("%s-%s-%s", var.environment, var.name, "connections")
+  alarm_description   = "Redis cluster number of client connections"
+  comparison_operator = "GreaterThanThreshold"
+  evaluation_periods  = "1"
+  metric_name         = "CurrConnections"
+  namespace           = "AWS/ElastiCache"
+  period              = "300"
+  statistic           = "Average"
+  threshold           = var.alarm_connections_threshold
+
+  dimensions = {
+    CacheClusterId = var.num_cache_nodes > 1 ? aws_elasticache_replication_group.redis[count.index].id : aws_elasticache_cluster.redis[0].id
+  }
+
+  alarm_actions = [aws_sns_topic.slack_topic[0].arn]
+  ok_actions    = [aws_sns_topic.slack_topic[0].arn]
+  depends_on    = [aws_sns_topic.slack_topic]
+
+  tags = merge(
+    { "Name" = format("%s-%s-%s", var.environment, var.name, "connections_metric") },
+    local.tags,
+  )
+}
+
+# Alarm for Replication Lag (if using replication)
+resource "aws_cloudwatch_metric_alarm" "cache_replication_lag" {
+  count               = var.cloudwatch_metric_alarms_enabled && var.num_cache_nodes > 1 ? 1 : 0
+  alarm_name          = format("%s-%s-%s", var.environment, var.name, "replication-lag")
+  alarm_description   = "Redis replication lag"
+  comparison_operator = "GreaterThanThreshold"
+  evaluation_periods  = "1"
+  metric_name         = "ReplicationLag"
+  namespace           = "AWS/ElastiCache"
+  period              = "300"
+  statistic           = "Maximum"
+  threshold           = var.alarm_replication_lag_threshold
+
+  dimensions = {
+    ReplicationGroupId = aws_elasticache_replication_group.redis[count.index].id
+  }
+
+  alarm_actions = [aws_sns_topic.slack_topic[0].arn]
+  ok_actions    = [aws_sns_topic.slack_topic[0].arn]
+  depends_on    = [aws_sns_topic.slack_topic]
+
+  tags = merge(
+    { "Name" = format("%s-%s-%s", var.environment, var.name, "replication_lag_metric") },
+    local.tags,
+  )
+}
+
+# Alarm for Cache Hits
+resource "aws_cloudwatch_metric_alarm" "cache_hits" {
+  count               = var.cloudwatch_metric_alarms_enabled ? 1 : 0
+  alarm_name          = format("%s-%s-%s", var.environment, var.name, "cache-hits")
+  alarm_description   = "Redis cache hits"
+  comparison_operator = "LessThanThreshold"
+  evaluation_periods  = "1"
+  metric_name         = "CacheHits"
+  namespace           = "AWS/ElastiCache"
+  period              = "300"
+  statistic           = "Sum"
+  threshold           = var.alarm_cache_hits_threshold
+
+  dimensions = {
+    CacheClusterId = var.num_cache_nodes > 1 ? aws_elasticache_replication_group.redis[count.index].id : aws_elasticache_cluster.redis[0].id
+  }
+
+  alarm_actions = [aws_sns_topic.slack_topic[0].arn]
+  ok_actions    = [aws_sns_topic.slack_topic[0].arn]
+  depends_on    = [aws_sns_topic.slack_topic]
+
+  tags = merge(
+    { "Name" = format("%s-%s-%s", var.environment, var.name, "cache_hits_metric") },
+    local.tags,
+  )
+}
+
+# Alarm for Cache Misses
+resource "aws_cloudwatch_metric_alarm" "cache_misses" {
+  count               = var.cloudwatch_metric_alarms_enabled ? 1 : 0
+  alarm_name          = format("%s-%s-%s", var.environment, var.name, "cache-misses")
+  alarm_description   = "Redis cache misses"
+  comparison_operator = "GreaterThanThreshold"
+  evaluation_periods  = "1"
+  metric_name         = "CacheMisses"
+  namespace           = "AWS/ElastiCache"
+  period              = "300"
+  statistic           = "Sum"
+  threshold           = var.alarm_cache_misses_threshold
+
+  dimensions = {
+    CacheClusterId = var.num_cache_nodes > 1 ? aws_elasticache_replication_group.redis[count.index].id : aws_elasticache_cluster.redis[0].id
+  }
+
+  alarm_actions = [aws_sns_topic.slack_topic[0].arn]
+  ok_actions    = [aws_sns_topic.slack_topic[0].arn]
+  depends_on    = [aws_sns_topic.slack_topic]
+
+  tags = merge(
+    { "Name" = format("%s-%s-%s", var.environment, var.name, "cache_misses_metric") },
+    local.tags,
+  )
+}
+
 resource "aws_kms_key" "this" {
   count       = var.slack_notification_enabled ? 1 : 0
   description = "KMS key for notify-slack test"
