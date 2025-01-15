@@ -36,17 +36,17 @@ resource "aws_elasticache_parameter_group" "default" {
 }
 
 resource "aws_elasticache_cluster" "redis" {
-  count               = var.num_cache_nodes == 1 ? 1 : 0  # Only create if num_cache_nodes == 1
-  cluster_id          = "${var.environment}-${var.name}-standalone-redis"
-  engine              = "redis"
-  engine_version      = var.engine_version
-  node_type           = var.node_type
-  num_cache_nodes     = 1  # Standalone Redis can have only 1 node
-  port                = var.port
-  parameter_group_name = join("", aws_elasticache_parameter_group.default.*.name)
-  security_group_ids  = [module.security_group_redis.security_group_id]
-  subnet_group_name   = aws_elasticache_subnet_group.elasticache.id
-  snapshot_window     = var.snapshot_window
+  count                    = var.num_cache_nodes == 1 ? 1 : 0 # Only create if num_cache_nodes == 1
+  cluster_id               = "${var.environment}-${var.name}-standalone-redis"
+  engine                   = "redis"
+  engine_version           = var.engine_version
+  node_type                = var.node_type
+  num_cache_nodes          = 1 # Standalone Redis must have only 1 node
+  port                     = var.port
+  parameter_group_name     = join("", aws_elasticache_parameter_group.default.*.name)
+  security_group_ids       = [module.security_group_redis.security_group_id]
+  subnet_group_name        = aws_elasticache_subnet_group.elasticache.id
+  snapshot_window          = var.snapshot_window
   snapshot_retention_limit = var.snapshot_retention_limit
 
 
@@ -77,14 +77,14 @@ resource "aws_elasticache_cluster" "redis" {
 }
 
 resource "aws_elasticache_replication_group" "redis" {
-  count                       = var.num_cache_nodes > 1 ? 1 : 0  # Only create if num_cache_nodes > 1
-  replication_group_id        = "${var.environment}-${var.name}-cluster"
+  count                       = var.num_cache_nodes > 1 ? 1 : 0 # Only create if num_cache_nodes == 1
+  replication_group_id        = "${var.environment}-${var.name}-redis"
   port                        = var.port
   engine                      = "redis"
   node_type                   = var.node_type
   description                 = "Redis cluster for ${var.environment}-${var.name}-redis"
   engine_version              = var.engine_version
-  num_cache_clusters          = var.num_cache_nodes # Standalone Redis has 1 node
+  num_cache_clusters          = var.cluster_mode_enabled ? null : var.num_cache_nodes
   parameter_group_name        = join("", aws_elasticache_parameter_group.default.*.name) #var.parameter_group_name
   security_group_ids          = [module.security_group_redis.security_group_id]
   subnet_group_name           = aws_elasticache_subnet_group.elasticache.id
@@ -92,7 +92,7 @@ resource "aws_elasticache_replication_group" "redis" {
   snapshot_arns               = var.snapshot_arns
   snapshot_window             = var.snapshot_window
   snapshot_retention_limit    = var.snapshot_retention_limit
-  automatic_failover_enabled  = var.multi_az_enabled ? true : false
+  automatic_failover_enabled  = var.multi_az_enabled ? true : var.automatic_failover_enabled
   multi_az_enabled            = var.multi_az_enabled
   at_rest_encryption_enabled  = var.at_rest_encryption_enabled
   kms_key_id                  = var.at_rest_encryption_enabled ? var.kms_key_arn : null
@@ -151,7 +151,7 @@ resource "aws_security_group_rule" "default_ingress" {
   from_port                = var.port
   protocol                 = "tcp"
   security_group_id        = module.security_group_redis.security_group_id
-  source_security_group_id = element(var.allowed_security_groups, count.index)
+  source_security_group_id = element(var.allowed_security_groups, 0)
 }
 
 resource "aws_security_group_rule" "cidr_ingress" {
@@ -161,7 +161,7 @@ resource "aws_security_group_rule" "cidr_ingress" {
   to_port           = var.port
   from_port         = var.port
   protocol          = "tcp"
-  cidr_blocks       = element(var.allowed_cidr_blocks, count.index)
+  cidr_blocks       = element(var.allowed_cidr_blocks, 0)
   security_group_id = module.security_group_redis.security_group_id
 }
 
@@ -261,7 +261,6 @@ resource "aws_cloudwatch_metric_alarm" "cache_memory" {
   )
 }
 
-# Alarm for Evictions
 resource "aws_cloudwatch_metric_alarm" "cache_evictions" {
   count               = var.cloudwatch_metric_alarms_enabled ? 1 : 0
   alarm_name          = format("%s-%s-%s", var.environment, var.name, "evictions")
@@ -288,7 +287,6 @@ resource "aws_cloudwatch_metric_alarm" "cache_evictions" {
   )
 }
 
-# Alarm for Connections
 resource "aws_cloudwatch_metric_alarm" "cache_connections" {
   count               = var.cloudwatch_metric_alarms_enabled ? 1 : 0
   alarm_name          = format("%s-%s-%s", var.environment, var.name, "connections")
@@ -315,7 +313,6 @@ resource "aws_cloudwatch_metric_alarm" "cache_connections" {
   )
 }
 
-# Alarm for Replication Lag (if using replication)
 resource "aws_cloudwatch_metric_alarm" "cache_replication_lag" {
   count               = var.cloudwatch_metric_alarms_enabled && var.num_cache_nodes > 1 ? 1 : 0
   alarm_name          = format("%s-%s-%s", var.environment, var.name, "replication-lag")
@@ -329,7 +326,7 @@ resource "aws_cloudwatch_metric_alarm" "cache_replication_lag" {
   threshold           = var.alarm_replication_lag_threshold
 
   dimensions = {
-    ReplicationGroupId = aws_elasticache_replication_group.redis[count.index].id
+    ReplicationGroupId = aws_elasticache_replication_group.redis[0].id
   }
 
   alarm_actions = [aws_sns_topic.slack_topic[0].arn]
@@ -342,7 +339,6 @@ resource "aws_cloudwatch_metric_alarm" "cache_replication_lag" {
   )
 }
 
-# Alarm for Cache Hits
 resource "aws_cloudwatch_metric_alarm" "cache_hits" {
   count               = var.cloudwatch_metric_alarms_enabled ? 1 : 0
   alarm_name          = format("%s-%s-%s", var.environment, var.name, "cache-hits")
@@ -369,7 +365,6 @@ resource "aws_cloudwatch_metric_alarm" "cache_hits" {
   )
 }
 
-# Alarm for Cache Misses
 resource "aws_cloudwatch_metric_alarm" "cache_misses" {
   count               = var.cloudwatch_metric_alarms_enabled ? 1 : 0
   alarm_name          = format("%s-%s-%s", var.environment, var.name, "cache-misses")

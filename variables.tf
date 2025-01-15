@@ -210,25 +210,25 @@ variable "alarm_eviction_threshold" {
 
 variable "alarm_connections_threshold" {
   type        = number
-  default     = 100  # Increased for typical traffic
+  default     = 100 # Increased for typical traffic
   description = "Connections threshold alarm level"
 }
 
 variable "alarm_replication_lag_threshold" {
   type        = number
-  default     = 10  # Appropriate for typical usage
+  default     = 10 # Appropriate for typical usage
   description = "Replication lag threshold alarm level"
 }
 
 variable "alarm_cache_hits_threshold" {
   type        = number
-  default     = 1000  # Increased for typical usage
+  default     = 1000 # Increased for typical usage
   description = "Cache hits threshold alarm level"
 }
 
 variable "alarm_cache_misses_threshold" {
   type        = number
-  default     = 50  # Increased to prevent alerts for occasional misses
+  default     = 50 # Increased to prevent alerts for occasional misses
   description = "Cache misses threshold alarm level"
 }
 
