@@ -36,7 +36,7 @@ resource "aws_elasticache_parameter_group" "default" {
 }
 
 resource "aws_elasticache_cluster" "redis" {
-  count                    = var.num_cache_nodes == 1 ? 1 : 0 # Only create if num_cache_nodes == 1
+  count                    = (!var.transit_encryption_enabled && var.num_cache_nodes == 1) ? 1 : 0
   cluster_id               = "${var.environment}-${var.name}-standalone-redis"
   engine                   = "redis"
   engine_version           = var.engine_version
@@ -77,7 +77,7 @@ resource "aws_elasticache_cluster" "redis" {
 }
 
 resource "aws_elasticache_replication_group" "redis" {
-  count                       = var.num_cache_nodes > 1 ? 1 : 0 # Only create if num_cache_nodes == 1
+  count                       = var.transit_encryption_enabled ? 1 : 0 # Only create if num_cache_nodes == 1
   replication_group_id        = "${var.environment}-${var.name}-redis"
   port                        = var.port
   engine                      = "redis"
@@ -222,7 +222,7 @@ resource "aws_cloudwatch_metric_alarm" "cache_cpu" {
   threshold           = var.alarm_cpu_threshold_percent
 
   dimensions = {
-    CacheClusterId = var.num_cache_nodes > 1 ? aws_elasticache_replication_group.redis[count.index].id : aws_elasticache_cluster.redis[0].id
+    CacheClusterId = var.transit_encryption_enabled ? aws_elasticache_replication_group.redis[count.index].id : aws_elasticache_cluster.redis[0].id
   }
 
   alarm_actions = [aws_sns_topic.slack_topic[0].arn]
@@ -248,7 +248,7 @@ resource "aws_cloudwatch_metric_alarm" "cache_memory" {
   threshold           = var.alarm_memory_threshold_bytes
 
   dimensions = {
-    CacheClusterId = var.num_cache_nodes > 1 ? aws_elasticache_replication_group.redis[count.index].id : aws_elasticache_cluster.redis[0].id
+    CacheClusterId = var.transit_encryption_enabled ? aws_elasticache_replication_group.redis[count.index].id : aws_elasticache_cluster.redis[0].id
   }
 
   alarm_actions = [aws_sns_topic.slack_topic[0].arn]
@@ -274,7 +274,7 @@ resource "aws_cloudwatch_metric_alarm" "cache_evictions" {
   threshold           = var.alarm_eviction_threshold
 
   dimensions = {
-    CacheClusterId = var.num_cache_nodes > 1 ? aws_elasticache_replication_group.redis[count.index].id : aws_elasticache_cluster.redis[0].id
+    CacheClusterId = var.transit_encryption_enabled ? aws_elasticache_replication_group.redis[count.index].id : aws_elasticache_cluster.redis[0].id
   }
 
   alarm_actions = [aws_sns_topic.slack_topic[0].arn]
@@ -300,7 +300,7 @@ resource "aws_cloudwatch_metric_alarm" "cache_connections" {
   threshold           = var.alarm_connections_threshold
 
   dimensions = {
-    CacheClusterId = var.num_cache_nodes > 1 ? aws_elasticache_replication_group.redis[count.index].id : aws_elasticache_cluster.redis[0].id
+    CacheClusterId = var.transit_encryption_enabled ? aws_elasticache_replication_group.redis[count.index].id : aws_elasticache_cluster.redis[0].id
   }
 
   alarm_actions = [aws_sns_topic.slack_topic[0].arn]
@@ -352,7 +352,7 @@ resource "aws_cloudwatch_metric_alarm" "cache_hits" {
   threshold           = var.alarm_cache_hits_threshold
 
   dimensions = {
-    CacheClusterId = var.num_cache_nodes > 1 ? aws_elasticache_replication_group.redis[count.index].id : aws_elasticache_cluster.redis[0].id
+    CacheClusterId = var.transit_encryption_enabled ? aws_elasticache_replication_group.redis[count.index].id : aws_elasticache_cluster.redis[0].id
   }
 
   alarm_actions = [aws_sns_topic.slack_topic[0].arn]
@@ -378,7 +378,7 @@ resource "aws_cloudwatch_metric_alarm" "cache_misses" {
   threshold           = var.alarm_cache_misses_threshold
 
   dimensions = {
-    CacheClusterId = var.num_cache_nodes > 1 ? aws_elasticache_replication_group.redis[count.index].id : aws_elasticache_cluster.redis[0].id
+    CacheClusterId = var.transit_encryption_enabled ? aws_elasticache_replication_group.redis[count.index].id : aws_elasticache_cluster.redis[0].id
   }
 
   alarm_actions = [aws_sns_topic.slack_topic[0].arn]

@@ -96,7 +96,7 @@ module "vpc" {
 }
 
 module "redis" {
-  source                           = "../../"
+  source                           = "squareops/elasticache-redis/aws"
   name                             = local.name
   family                           = local.family
   node_type                        = local.node_type
@@ -107,6 +107,7 @@ module "redis" {
   subnets                          = module.vpc.database_subnets
   kms_key_arn                      = module.kms.key_arn
   multi_az_enabled                 = true
+  transit_encryption_enabled       = true
   availability_zones               = local.availability_zones
   snapshot_window                  = "07:00-08:00"
   maintenance_window               = "sun:09:00-sun:10:00"

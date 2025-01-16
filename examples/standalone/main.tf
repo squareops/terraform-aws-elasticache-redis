@@ -36,8 +36,8 @@ module "vpc" {
 }
 
 module "redis" {
-  source                           = "../../"
-  num_cache_nodes                  = 1   #keep it 1 for To create only master node and 0 replica node.
+  source                           = "squareops/elasticache-redis/aws"
+  num_cache_nodes                  = 1 #keep it 1 for To create only master node and 0 replica node.
   name                             = local.name
   family                           = local.family
   node_type                        = local.node_type

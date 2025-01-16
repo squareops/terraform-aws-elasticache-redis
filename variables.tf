@@ -36,7 +36,6 @@ variable "parameter" {
 
 variable "num_cache_nodes" {
   description = "The number of cache nodes"
-  default     = 1
   type        = number
 }
 
@@ -127,7 +126,7 @@ variable "at_rest_encryption_enabled" {
 
 variable "transit_encryption_enabled" {
   description = "(Optional) Whether to enable encryption in transit"
-  default     = true
+  default     = false
   type        = bool
 }
 
