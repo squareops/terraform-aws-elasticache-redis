@@ -20,66 +20,6 @@ data "aws_availability_zones" "primary" {}
 data "aws_caller_identity" "current" {}
 data "aws_region" "current" {}
 
-module "kms" {
-  source = "terraform-aws-modules/kms/aws"
-
-  deletion_window_in_days = 7
-  description             = "Complete key example showing various configurations available"
-  enable_key_rotation     = false
-  is_enabled              = true
-  key_usage               = "ENCRYPT_DECRYPT"
-  multi_region            = false
-
-  # Policy
-  enable_default_policy = true
-  key_owners            = [local.current_identity]
-  key_administrators    = [local.current_identity]
-  key_users             = [local.current_identity]
-  key_service_users     = [local.current_identity]
-  key_statements = [
-    {
-      sid = "Allow use of the key"
-      actions = [
-        "kms:Encrypt*",
-        "kms:Decrypt*",
-        "kms:ReEncrypt*",
-        "kms:GenerateDataKey*",
-        "kms:Describe*"
-      ]
-      resources = ["*"]
-
-      principals = [
-        {
-          type = "Service"
-          identifiers = [
-            "elasticache.amazonaws.com"
-          ]
-        }
-      ]
-    },
-    {
-      sid       = "Enable IAM User Permissions"
-      actions   = ["kms:*"]
-      resources = ["*"]
-
-      principals = [
-        {
-          type = "AWS"
-          identifiers = [
-            "arn:aws:iam::${data.aws_caller_identity.current.account_id}:root",
-            data.aws_caller_identity.current.arn,
-          ]
-        }
-      ]
-    }
-  ]
-
-  # Aliases
-  aliases = ["${local.name}"]
-
-  tags = local.additional_tags
-}
-
 module "vpc" {
   source                  = "squareops/vpc/aws"
   version                 = "3.3.1"
@@ -97,18 +37,14 @@ module "vpc" {
 
 module "redis" {
   source                           = "squareops/elasticache-redis/aws"
+  num_cache_nodes                  = 1 #keep it 1 for To create only master node and 0 replica node.
   name                             = local.name
   family                           = local.family
   node_type                        = local.node_type
   environment                      = local.environment
   engine_version                   = local.redis_engine_version
-  num_cache_nodes                  = 2
   vpc_id                           = module.vpc.vpc_id
   subnets                          = module.vpc.database_subnets
-  kms_key_arn                      = module.kms.key_arn
-  multi_az_enabled                 = true
-  transit_encryption_enabled       = true
-  availability_zones               = local.availability_zones
   snapshot_window                  = "07:00-08:00"
   maintenance_window               = "sun:09:00-sun:10:00"
   allowed_security_groups          = local.allowed_security_groups

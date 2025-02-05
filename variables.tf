@@ -36,7 +36,6 @@ variable "parameter" {
 
 variable "num_cache_nodes" {
   description = "The number of cache nodes"
-  default     = 1
   type        = number
 }
 
@@ -66,7 +65,7 @@ variable "port" {
 
 variable "automatic_failover_enabled" {
   description = "Enable automatic failover "
-  default     = true
+  default     = false
   type        = bool
 }
 
@@ -127,7 +126,7 @@ variable "at_rest_encryption_enabled" {
 
 variable "transit_encryption_enabled" {
   description = "(Optional) Whether to enable encryption in transit"
-  default     = true
+  default     = false
   type        = bool
 }
 
@@ -201,6 +200,37 @@ variable "alarm_cpu_threshold_percent" {
   default     = 75
   description = "CPU threshold alarm level"
 }
+
+variable "alarm_eviction_threshold" {
+  type        = number
+  default     = 20
+  description = "Eviction threshold alarm level"
+}
+
+variable "alarm_connections_threshold" {
+  type        = number
+  default     = 100 # Increased for typical traffic
+  description = "Connections threshold alarm level"
+}
+
+variable "alarm_replication_lag_threshold" {
+  type        = number
+  default     = 10 # Appropriate for typical usage
+  description = "Replication lag threshold alarm level"
+}
+
+variable "alarm_cache_hits_threshold" {
+  type        = number
+  default     = 1000 # Increased for typical usage
+  description = "Cache hits threshold alarm level"
+}
+
+variable "alarm_cache_misses_threshold" {
+  type        = number
+  default     = 50 # Increased to prevent alerts for occasional misses
+  description = "Cache misses threshold alarm level"
+}
+
 
 variable "alarm_actions" {
   type        = list(string)
