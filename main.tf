@@ -35,7 +35,49 @@ resource "aws_elasticache_parameter_group" "default" {
   }
 }
 
+resource "aws_elasticache_cluster" "redis" {
+  count                    = (!var.transit_encryption_enabled && var.num_cache_nodes == 1) ? 1 : 0
+  cluster_id               = "${var.environment}-${var.name}-standalone-redis"
+  engine                   = "redis"
+  engine_version           = var.engine_version
+  node_type                = var.node_type
+  num_cache_nodes          = 1 # Standalone Redis must have only 1 node
+  port                     = var.port
+  parameter_group_name     = join("", aws_elasticache_parameter_group.default.*.name)
+  security_group_ids       = [module.security_group_redis.security_group_id]
+  subnet_group_name        = aws_elasticache_subnet_group.elasticache.id
+  snapshot_window          = var.snapshot_window
+  snapshot_retention_limit = var.snapshot_retention_limit
+
+
+  dynamic "log_delivery_configuration" {
+    for_each = local.slow_log
+    content {
+      log_type         = "slow-log"
+      log_format       = var.slow_log_format
+      destination      = var.slow_log_destination
+      destination_type = var.slow_log_destination_type
+    }
+  }
+
+  dynamic "log_delivery_configuration" {
+    for_each = local.engine_log
+    content {
+      log_type         = "engine-log"
+      log_format       = var.engine_log_format
+      destination      = var.engine_log_destination
+      destination_type = var.engine_log_destination_type
+    }
+  }
+
+  tags = {
+    Name        = "${var.environment}-${var.name}"
+    Environment = var.environment
+  }
+}
+
 resource "aws_elasticache_replication_group" "redis" {
+  count                       = var.transit_encryption_enabled ? 1 : 0 # Only create if num_cache_nodes == 1
   replication_group_id        = "${var.environment}-${var.name}-redis"
   port                        = var.port
   engine                      = "redis"
@@ -50,7 +92,7 @@ resource "aws_elasticache_replication_group" "redis" {
   snapshot_arns               = var.snapshot_arns
   snapshot_window             = var.snapshot_window
   snapshot_retention_limit    = var.snapshot_retention_limit
-  automatic_failover_enabled  = var.cluster_mode_enabled ? true : var.automatic_failover_enabled
+  automatic_failover_enabled  = var.multi_az_enabled ? true : var.automatic_failover_enabled
   multi_az_enabled            = var.multi_az_enabled
   at_rest_encryption_enabled  = var.at_rest_encryption_enabled
   kms_key_id                  = var.at_rest_encryption_enabled ? var.kms_key_arn : null
@@ -109,7 +151,7 @@ resource "aws_security_group_rule" "default_ingress" {
   from_port                = var.port
   protocol                 = "tcp"
   security_group_id        = module.security_group_redis.security_group_id
-  source_security_group_id = element(var.allowed_security_groups, count.index)
+  source_security_group_id = element(var.allowed_security_groups, 0)
 }
 
 resource "aws_security_group_rule" "cidr_ingress" {
@@ -119,7 +161,7 @@ resource "aws_security_group_rule" "cidr_ingress" {
   to_port           = var.port
   from_port         = var.port
   protocol          = "tcp"
-  cidr_blocks       = element(var.allowed_cidr_blocks, count.index)
+  cidr_blocks       = element(var.allowed_cidr_blocks, 0)
   security_group_id = module.security_group_redis.security_group_id
 }
 
@@ -177,11 +219,10 @@ resource "aws_cloudwatch_metric_alarm" "cache_cpu" {
   namespace           = "AWS/ElastiCache"
   period              = "300"
   statistic           = "Average"
-
-  threshold = var.alarm_cpu_threshold_percent
+  threshold           = var.alarm_cpu_threshold_percent
 
   dimensions = {
-    CacheClusterId = aws_elasticache_replication_group.redis.id
+    CacheClusterId = var.transit_encryption_enabled ? aws_elasticache_replication_group.redis[count.index].id : aws_elasticache_cluster.redis[0].id
   }
 
   alarm_actions = [aws_sns_topic.slack_topic[0].arn]
@@ -204,11 +245,10 @@ resource "aws_cloudwatch_metric_alarm" "cache_memory" {
   namespace           = "AWS/ElastiCache"
   period              = "60"
   statistic           = "Average"
-
-  threshold = var.alarm_memory_threshold_bytes
+  threshold           = var.alarm_memory_threshold_bytes
 
   dimensions = {
-    CacheClusterId = aws_elasticache_replication_group.redis.id
+    CacheClusterId = var.transit_encryption_enabled ? aws_elasticache_replication_group.redis[count.index].id : aws_elasticache_cluster.redis[0].id
   }
 
   alarm_actions = [aws_sns_topic.slack_topic[0].arn]
@@ -217,6 +257,136 @@ resource "aws_cloudwatch_metric_alarm" "cache_memory" {
 
   tags = merge(
     { "Name" = format("%s-%s-%s", var.environment, var.name, "memory-metric") },
+    local.tags,
+  )
+}
+
+resource "aws_cloudwatch_metric_alarm" "cache_evictions" {
+  count               = var.cloudwatch_metric_alarms_enabled ? 1 : 0
+  alarm_name          = format("%s-%s-%s", var.environment, var.name, "evictions")
+  alarm_description   = "Redis evictions due to memory pressure"
+  comparison_operator = "GreaterThanThreshold"
+  evaluation_periods  = "1"
+  metric_name         = "Evictions"
+  namespace           = "AWS/ElastiCache"
+  period              = "300"
+  statistic           = "Sum"
+  threshold           = var.alarm_eviction_threshold
+
+  dimensions = {
+    CacheClusterId = var.transit_encryption_enabled ? aws_elasticache_replication_group.redis[count.index].id : aws_elasticache_cluster.redis[0].id
+  }
+
+  alarm_actions = [aws_sns_topic.slack_topic[0].arn]
+  ok_actions    = [aws_sns_topic.slack_topic[0].arn]
+  depends_on    = [aws_sns_topic.slack_topic]
+
+  tags = merge(
+    { "Name" = format("%s-%s-%s", var.environment, var.name, "eviction_metric") },
+    local.tags,
+  )
+}
+
+resource "aws_cloudwatch_metric_alarm" "cache_connections" {
+  count               = var.cloudwatch_metric_alarms_enabled ? 1 : 0
+  alarm_name          = format("%s-%s-%s", var.environment, var.name, "connections")
+  alarm_description   = "Redis cluster number of client connections"
+  comparison_operator = "GreaterThanThreshold"
+  evaluation_periods  = "1"
+  metric_name         = "CurrConnections"
+  namespace           = "AWS/ElastiCache"
+  period              = "300"
+  statistic           = "Average"
+  threshold           = var.alarm_connections_threshold
+
+  dimensions = {
+    CacheClusterId = var.transit_encryption_enabled ? aws_elasticache_replication_group.redis[count.index].id : aws_elasticache_cluster.redis[0].id
+  }
+
+  alarm_actions = [aws_sns_topic.slack_topic[0].arn]
+  ok_actions    = [aws_sns_topic.slack_topic[0].arn]
+  depends_on    = [aws_sns_topic.slack_topic]
+
+  tags = merge(
+    { "Name" = format("%s-%s-%s", var.environment, var.name, "connections_metric") },
+    local.tags,
+  )
+}
+
+resource "aws_cloudwatch_metric_alarm" "cache_replication_lag" {
+  count               = var.cloudwatch_metric_alarms_enabled && var.num_cache_nodes > 1 ? 1 : 0
+  alarm_name          = format("%s-%s-%s", var.environment, var.name, "replication-lag")
+  alarm_description   = "Redis replication lag"
+  comparison_operator = "GreaterThanThreshold"
+  evaluation_periods  = "1"
+  metric_name         = "ReplicationLag"
+  namespace           = "AWS/ElastiCache"
+  period              = "300"
+  statistic           = "Maximum"
+  threshold           = var.alarm_replication_lag_threshold
+
+  dimensions = {
+    ReplicationGroupId = aws_elasticache_replication_group.redis[0].id
+  }
+
+  alarm_actions = [aws_sns_topic.slack_topic[0].arn]
+  ok_actions    = [aws_sns_topic.slack_topic[0].arn]
+  depends_on    = [aws_sns_topic.slack_topic]
+
+  tags = merge(
+    { "Name" = format("%s-%s-%s", var.environment, var.name, "replication_lag_metric") },
+    local.tags,
+  )
+}
+
+resource "aws_cloudwatch_metric_alarm" "cache_hits" {
+  count               = var.cloudwatch_metric_alarms_enabled ? 1 : 0
+  alarm_name          = format("%s-%s-%s", var.environment, var.name, "cache-hits")
+  alarm_description   = "Redis cache hits"
+  comparison_operator = "LessThanThreshold"
+  evaluation_periods  = "1"
+  metric_name         = "CacheHits"
+  namespace           = "AWS/ElastiCache"
+  period              = "300"
+  statistic           = "Sum"
+  threshold           = var.alarm_cache_hits_threshold
+
+  dimensions = {
+    CacheClusterId = var.transit_encryption_enabled ? aws_elasticache_replication_group.redis[count.index].id : aws_elasticache_cluster.redis[0].id
+  }
+
+  alarm_actions = [aws_sns_topic.slack_topic[0].arn]
+  ok_actions    = [aws_sns_topic.slack_topic[0].arn]
+  depends_on    = [aws_sns_topic.slack_topic]
+
+  tags = merge(
+    { "Name" = format("%s-%s-%s", var.environment, var.name, "cache_hits_metric") },
+    local.tags,
+  )
+}
+
+resource "aws_cloudwatch_metric_alarm" "cache_misses" {
+  count               = var.cloudwatch_metric_alarms_enabled ? 1 : 0
+  alarm_name          = format("%s-%s-%s", var.environment, var.name, "cache-misses")
+  alarm_description   = "Redis cache misses"
+  comparison_operator = "GreaterThanThreshold"
+  evaluation_periods  = "1"
+  metric_name         = "CacheMisses"
+  namespace           = "AWS/ElastiCache"
+  period              = "300"
+  statistic           = "Sum"
+  threshold           = var.alarm_cache_misses_threshold
+
+  dimensions = {
+    CacheClusterId = var.transit_encryption_enabled ? aws_elasticache_replication_group.redis[count.index].id : aws_elasticache_cluster.redis[0].id
+  }
+
+  alarm_actions = [aws_sns_topic.slack_topic[0].arn]
+  ok_actions    = [aws_sns_topic.slack_topic[0].arn]
+  depends_on    = [aws_sns_topic.slack_topic]
+
+  tags = merge(
+    { "Name" = format("%s-%s-%s", var.environment, var.name, "cache_misses_metric") },
     local.tags,
   )
 }
